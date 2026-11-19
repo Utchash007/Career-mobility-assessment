@@ -1,6 +1,6 @@
 # Frontend — component-first interface
 
-**Phases 1–6 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–7 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
 `/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
@@ -135,6 +135,15 @@ criterion scores remain 0–1 and overall fit 0–100. Evidence is narrowed per 
 unknown arbitrary objects are omitted, never stringified into the interface.
 `/recommendations` preserves server ranking/totals, offers label/common URL filters
 and handles missing profile separately from zero results. No per-card requests.
+
+### Opportunity detail
+
+`/opportunities/[id]` validates positive safe IDs and shows full required/preferred
+skills, education, languages and stated eligibility rules. Description is plain text.
+Opportunity/profile reads start concurrently; match follows only profile existence.
+Missing/deleted profile or unavailable matching does not hide available role data.
+`MatchPanel` reuses the full five-criterion breakdown and visible eligibility flags.
+Back links preserve only validated known collection context, never arbitrary return URLs.
 
 ## Color scheme
 
