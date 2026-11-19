@@ -1,19 +1,18 @@
-"use client";
-
-import { ThemeProvider } from "flowbite-react";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { ReactNode } from "react";
-import { ThemeInit } from "@/.flowbite-react/init";
-import { APP_THEME } from "@/lib/display/flowbite-theme.ts";
+import FlowbiteProvider from "@/components/FlowbiteProvider/FlowbiteProvider";
+import { authenticationConfigured } from "@/lib/auth/config.ts";
+import { CLERK_APPEARANCE } from "@/lib/display/clerk-appearance.ts";
 
 export interface AppProvidersProps {
   children: ReactNode;
 }
 
 export default function AppProviders({ children }: AppProvidersProps) {
+  if (!authenticationConfigured()) return <FlowbiteProvider>{children}</FlowbiteProvider>;
   return (
-    <ThemeProvider theme={APP_THEME} applyTheme="replace">
-      <ThemeInit />
-      {children}
-    </ThemeProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" appearance={CLERK_APPEARANCE}>
+      <FlowbiteProvider>{children}</FlowbiteProvider>
+    </ClerkProvider>
   );
 }

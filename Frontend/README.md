@@ -1,10 +1,11 @@
 # Frontend — component-first interface
 
-**Phases 1 and 2 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–3 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
-`/` renders a public interface preview, not a working assessment or dashboard.
-There are no live forms, authenticated API requests or deployment integrations.
+`/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
+sign-in/up screens, a session boundary and typed authenticated API adapters are wired.
+Feature forms and collections follow in later phases; no live integration has been tested.
 `GET /api/health` still returns `{"status":"ok"}`; it checks neither the backend
 nor external services.
 
@@ -45,6 +46,7 @@ Server Components are the default; interactive subtrees alone use `"use client"`
 | `lib/forms/` | Input normalization, profile drafts and dotted validation errors |
 | `lib/queries/` | Exact collection URL parsing, serialization and filter application |
 | `lib/display/` | Labels, Clerk display-name fallback and theme colors; no JSX |
+| `lib/api/`, `hooks/useApi.ts` | Allowlisted no-store transport, server reads and session-scoped browser requests |
 | `tests/fixtures/` | Fictional in-memory contract examples, never runtime identities |
 
 Contracts follow the implemented backend schemas, not obsolete design examples.
@@ -77,8 +79,8 @@ Every name below uses `components/<Name>/<Name>.tsx`:
 | `NotFoundScreen` | Safe unknown-route/resource presentation with a fixed internal home link |
 | `WorkflowPreviewCard`, `HomeScreen` | Static public overview; no account, fixtures or computed results |
 
-The root layout only composes imported providers/shell inside required HTML/body
-tags. Root page, loading, error and not-found entrypoints delegate to the matching
+The root layout composes providers inside required HTML/body tags; the `(app)`
+layout composes the protected shell. Page, loading, error and not-found entrypoints delegate to the matching
 components. Server-rendered shell/content stays outside the client provider's
 import graph and is passed through `children`. Only menu, retry and dialog
 interactions (plus the provider) are explicit client boundaries.
@@ -117,7 +119,8 @@ and must accompany text, never color alone. Keep light mode.
 `lib/display/flowbite-theme.ts` now applies static palette-token classes to
 Flowbite buttons, alerts, cards, spinner, modal and navigation through `AppProviders`.
 Overridden leaves replace the corresponding defaults; other Flowbite defaults remain.
-Clerk appearance is deferred to Phase 3. Styling is not verified accessibility.
+Clerk's appearance uses the same palette through `lib/display/clerk-appearance.ts`.
+Styling is not verified accessibility.
 
 ## Toolchain and installation
 
@@ -139,7 +142,7 @@ npm run build
 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open `http://127.0.0.1:3000/` for the preview or `/api/health` for frontend liveness.
+Open `http://127.0.0.1:3000/` for the signed-in overview or `/api/health` for frontend liveness.
 Stop with Ctrl+C. To run the production
 build instead:
 
@@ -181,26 +184,41 @@ do not enable all install scripts blindly.
   enum/decorator features are used.
 - `app/layout.tsx`: metadata and HTML/body containing imported providers/shell.
 
-### Environment and intentionally unwired authentication
+### Environment and authentication
 
-No `.env` file, runtime credentials, Clerk instance, database, or backend is needed
-for the public preview. Keep shared credentials in the repository root `.env`. Next.js first
+Missing Clerk configuration shows `/setup`, never a private fixture screen.
+Keep shared credentials in the repository root `.env`. Next.js first
 loads `Frontend/.env*` in its normal precedence order; `next.config.ts` then loads the
 root `.env` for missing values only, using Node's dotenv parser. Real environment
 variables and frontend-local values take precedence per key. Root lookup is anchored
 to `load-root-env.mjs`, not the terminal's working directory. A missing root file is allowed.
 
-Optional future variables are `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
-and server-only `CLERK_SECRET_KEY`; they are currently unused. `JWKS_PUBLIC_KEY` is
+Required variables for private workflows are `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
+and server-only `CLERK_SECRET_KEY`. `JWKS_PUBLIC_KEY` is
 backend-only verification configuration. All `.env*` files, including example templates,
 are excluded from Git. Never expose database credentials, the secret key or JWKS
 configuration through `NEXT_PUBLIC_` variables or Next.js's `env` configuration.
 Public variables are inlined at build time when referenced; rebuild after changing them.
 
-**Clerk is intentionally unwired until authentication implementation.**
-`@clerk/nextjs` is installed, but there is no `ClerkProvider`, proxy/middleware,
-sign-in page, route protection, token handling, or authentication bypass. The
-public health endpoint does not imply any future business endpoint may be public.
+Clerk is wired through the server-owned `AppProviders`; `FlowbiteProvider` owns
+client theme initialization. Each protected page calls `await auth.protect()`.
+The proxy delegates to bare `clerkMiddleware()` when configured and otherwise
+rewrites to setup guidance. Keyless auto-provisioning is disabled; no Clerk CLI,
+instance creation, provider-settings changes or identity creation were performed.
+Catch-all `/sign-in` and `/sign-up` routes use Clerk's prebuilt UI.
+
+API base configuration must be an HTTPS origin (HTTP allowed only for local loopback),
+without credentials, query, hash or a path prefix. Example: `http://127.0.0.1:8000`.
+The backend's `CORS_ORIGINS` and `CLERK_AUTHORIZED_PARTIES` must allow the
+exact frontend origin; `localhost` and `127.0.0.1` are different origins.
+Use the existing backend environment-name guidance; do not expose backend credentials.
+Ordinary session tokens are acquired per request, never from a custom JWT template.
+Server reads and browser mutations share response validation, a 15-second timeout,
+abort handling, no-store caching and redirect rejection. There is no duplicate Next
+business API/BFF, automatic mutation retry or persistent token/profile storage.
+401 offers session recovery; 503 remains unavailable, not an empty success.
+Session changes hide stale server children, remount client drafts and abort old requests.
+Browser interaction and live identity isolation remain unverified.
 
 ## Exact dependency pins
 
@@ -221,7 +239,7 @@ public health endpoint does not imply any future business endpoint may be public
 | `@types/react`, `@types/react-dom`    | 19.3.0  |
 | `@types/node`                         | 24.19.2 |
 
-Zod now validates pure data contracts. Clerk is still unwired.
+Zod validates external data and complete write snapshots. Clerk is wired but unverified.
 **`openapi-typescript` is deliberately excluded.** Browser/component testing tools
 remain a separate approval decision; no additional dependencies, ESLint or other
 UI kit were installed for Phases 1–2.
@@ -247,13 +265,13 @@ npm ls --all
 
 Zero npm findings are a point-in-time dependency result, not an application
 security guarantee. Shared UI interactions are implemented but untested;
-authentication, user isolation and deployment security remain unimplemented and untested.
+authentication is implemented but untested; live user isolation and deployment security remain unverified.
 
-## Phases 1–2 verification status
+## Implementation verification status
 
 Node-runner cases are authored for profile conversion/normalization, queries,
 response contracts, architecture, palette contrast, navigation and shared UI source
-invariants. They have
+invariants, API destinations/response handling and authentication source boundaries. They have
 **not been run**. Lint, typecheck, build, audit and runtime checks have not been
 rerun for these changes either. Source assertions do not render components and
 cannot verify focus, hydration, responsive CSS or Flowbite compatibility.

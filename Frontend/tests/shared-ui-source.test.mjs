@@ -78,7 +78,7 @@ test("the shell owns one focusable main landmark and a working skip target in so
 });
 
 test("the provider initializes the generated light theme before its child subtree", () => {
-  const source = component("AppProviders");
+  const source = component("FlowbiteProvider");
   assert.match(source, /import \{ ThemeInit \} from "@\/\.flowbite-react\/init"/);
   assert.match(source, /ThemeProvider theme=\{APP_THEME\} applyTheme="replace"/);
   assert.ok(source.indexOf("<ThemeInit />") < source.indexOf("{children}"));

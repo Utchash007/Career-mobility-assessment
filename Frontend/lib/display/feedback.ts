@@ -30,8 +30,8 @@ export type ErrorReason = keyof typeof ERROR_COPY;
 export const CONFIGURATION_COPY = {
   preview: {
     title: "Interface preview",
-    description: "This phase provides the application shell and reusable UI. Authentication and backend access are not connected yet, so private workflows remain unavailable.",
-    nextStep: "Next: configure Clerk and connect the authenticated API. This screen does not use an account or application data.",
+    description: "Authentication and safe API access are connected. Feature screens are being implemented in sequence; this overview contains no saved data or calculated results.",
+    nextStep: "Profile, opportunities, matches and shortlist become available as their screens are implemented.",
   },
   authentication: {
     title: "Authentication setup is required",

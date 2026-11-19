@@ -25,7 +25,7 @@ export default function HomeScreen() {
             understanding match evidence, and keeping your next steps together.
           </p>
           <p className="inline-flex rounded-lg border border-action/30 bg-canvas px-3 py-2 text-sm font-medium text-action">
-            Preview only — private workflows are not connected yet
+            Signed-in preview — feature screens are being connected phase by phase
           </p>
         </div>
       </section>
