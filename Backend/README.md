@@ -14,7 +14,20 @@ Health is public; implemented business routes are protected by Clerk verificatio
 | 4 — profile read, complete replacement and sample loading | Implemented | Deferred to final phase |
 | 5 — validated seed command and opportunity discovery | Implemented; seed writes not run | Deferred to final phase |
 | 6 — pure deterministic matcher and explanations | Implemented | Deferred to final phase |
-| 7–8 — recommendation APIs and shortlist | Pending | Deferred to final phase |
+| 7 — ranked recommendation list and individual breakdown | Implemented | Deferred to final phase |
+| 8 — shortlist and application-data deletion | Pending | Deferred to final phase |
+
+### Recommendation routes
+
+- `GET /api/v1/matches`: page/page_size and common opportunity filters, optional label;
+  no custom sort, score, weights, profile body or selected user ID.
+- `GET /api/v1/matches/{opportunity_id}`: independent full breakdown for one role.
+
+Missing profile always returns 409 PROFILE_REQUIRED before opportunity lookup/evaluation,
+including empty filtered results. All candidates are evaluated and label-filtered before
+ranking, totals and paging; every list item contains all five criteria and full findings.
+Match detail and list use the same pure engine and saved profile. Results are recalculated
+on each request; no match table or shared user-response cache is used.
 
 ### Matching rules — version 1.0.0
 
