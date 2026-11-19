@@ -1,5 +1,6 @@
 import NotFoundScreen from "@/components/NotFoundScreen/NotFoundScreen";
+import AppShell from "@/components/AppShell/AppShell";
 
 export default function NotFound() {
-  return <NotFoundScreen />;
+  return <AppShell><NotFoundScreen /></AppShell>;
 }

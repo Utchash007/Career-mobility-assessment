@@ -15,6 +15,7 @@ import WorkAuthorisationFields from "@/components/WorkAuthorisationFields/WorkAu
 import SampleProfileAction from "@/components/SampleProfileAction/SampleProfileAction";
 import { useApi } from "@/hooks/useApi";
 import { useOperation } from "@/hooks/useOperation";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { type ApiFailure, isMissingProfile } from "@/lib/api/errors.ts";
 import type { ProfileRead } from "@/lib/contracts/profile.ts";
 import type { FieldErrors } from "@/lib/forms/errors.ts";
@@ -34,6 +35,7 @@ export default function ProfileForm({ initialProfile, displayName, today }: { in
   const [sampleOpen, setSampleOpen] = useState(false);
   const [reloadOpen, setReloadOpen] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(createProfileDraft(saved));
+  useUnsavedChanges(dirty);
   const blocked = operation.pending || Boolean(failure?.unconfirmed);
 
   function accept(profile: ProfileRead | null, description: string) {
@@ -72,6 +74,7 @@ export default function ProfileForm({ initialProfile, displayName, today }: { in
       try { return await api.getProfile(); } catch (error) { if (isMissingProfile(error)) return null; throw error; }
     }, (profile) => accept(profile, "Loaded the current saved state. No new write was made."), reject);
   }
+  if (failure?.reason === "session_expired") return <ApiFeedback reason="session_expired" />;
   return (
     <form ref={form} onSubmit={save} noValidate className="max-w-4xl space-y-8" aria-busy={operation.pending}>
       {!saved ? <Alert color="info">No application profile has been saved. Complete this form or deliberately load the fictional sample.</Alert> : null}

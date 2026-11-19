@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import HomeScreen from "@/components/HomeScreen/HomeScreen";
+import DashboardScreen from "@/components/DashboardScreen/DashboardScreen";
 
 export default async function HomePage() {
   await auth.protect();
-  return <HomeScreen />;
+  return <DashboardScreen />;
 }

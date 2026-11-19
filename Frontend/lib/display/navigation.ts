@@ -17,7 +17,7 @@ export interface NavigationItem {
 
 // Only link to implemented screens. Later phases explicitly enable their routes.
 export const NAVIGATION_ITEMS = [
-  { href: APP_ROUTES.home, label: "Home", availability: "available" },
+  { href: APP_ROUTES.home, label: "Dashboard", availability: "available" },
   { href: APP_ROUTES.profile, label: "Profile", availability: "available" },
   {
     href: APP_ROUTES.opportunities,
@@ -30,7 +30,7 @@ export const NAVIGATION_ITEMS = [
     availability: "available",
   },
   { href: APP_ROUTES.shortlist, label: "Shortlist", availability: "available" },
-  { href: APP_ROUTES.account, label: "Account", availability: "planned" },
+  { href: APP_ROUTES.account, label: "Account", availability: "available" },
 ] as const satisfies readonly NavigationItem[];
 
 export function isActiveRoute(pathname: string | null, href: AppRoute): boolean {

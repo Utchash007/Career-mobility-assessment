@@ -1,12 +1,13 @@
 # Frontend — component-first interface
 
-**Phases 1–8 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–9 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
-`/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
+`/` now requires sign-in and renders the dashboard. Clerk prebuilt
 sign-in/up screens, a session boundary and typed authenticated API adapters are wired.
 `/profile` now reads and replaces a complete profile, with a deliberately confirmed
-fictional sample action. `/opportunities` adds URL-driven discovery; no live integration has been tested.
+fictional sample action. Opportunities, ranked matches, details, shortlist/notes and
+application-data deletion are implemented; no live integration has been tested.
 `GET /api/health` still returns `{"status":"ok"}`; it checks neither the backend
 nor external services.
 
@@ -89,9 +90,9 @@ The route error adapter uses Next 16.4's stable `retry()` callback for refetchin
 recovery rather than the non-refetching `reset()` callback. These boundaries were
 reviewed against the installed Next.js `dist/docs/` guides, not older tutorials.
 
-`lib/display/navigation.ts` defines fixed internal destinations. Only Home is
-enabled; planned Profile, Opportunities, Matches (`/recommendations`), Shortlist
-and Account entries are non-link text marked **Soon**. Availability is not an
+`lib/display/navigation.ts` defines fixed internal destinations. Dashboard, Profile,
+Opportunities, Matches (`/recommendations`), Shortlist and Account are enabled.
+Availability is not an
 authorization mechanism. Later pages must check Clerk authorization independently.
 The menu reads Flowbite's own state for `aria-expanded`/`aria-controls`; it does
 not maintain a second copy. Desktop navigation begins at the `lg` breakpoint.
@@ -157,6 +158,18 @@ are recoverable, never automatically recreated. Note reconciliation uses bounded
 current-user list reads because the backend has no single-item shortlist GET.
 Same-item note/toggle operations serialize; deletion reserves an exclusive session
 operation. `/shortlist` uses backend filters/totals and repairs disappeared last pages.
+
+### Dashboard and privacy
+
+Dashboard reads independent totals concurrently and reuses match cards. Failed
+services are not displayed as zero counts. Profile summary excludes birthday.
+`/account` separates Clerk identity controls from application-data deletion.
+Deletion is explicitly confirmed and session-exclusive, sends no body and validates
+the application-only response. Confirmed success loads a fresh `/profile` document
+to discard all React drafts/router caches while keeping Clerk signed in. Failure or
+timeout never claims deletion. This action is never run on mount.
+Unsaved profile/note edits warn on document unload; in-app navigation has no custom
+blocking router. Background refresh does not erase dirty drafts.
 
 ## Color scheme
 

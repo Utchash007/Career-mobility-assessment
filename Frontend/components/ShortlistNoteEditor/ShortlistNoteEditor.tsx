@@ -7,6 +7,7 @@ import ApiFeedback from "@/components/ApiFeedback/ApiFeedback";
 import FieldFeedback from "@/components/FieldFeedback/FieldFeedback";
 import { useApi } from "@/hooks/useApi";
 import { useOperation } from "@/hooks/useOperation";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { ApiFailure, isMissingProfile } from "@/lib/api/errors.ts";
 import { readSavedItem } from "@/lib/api/saved-item.ts";
 import { characterCount } from "@/lib/contracts/common.ts";
@@ -23,8 +24,10 @@ export default function ShortlistNoteEditor({ item }: { item: ShortlistItem }) {
   const [error, setError] = useState<string | undefined>();
   const [message, setMessage] = useState("");
   const dirty = draft !== saved;
+  useUnsavedChanges(dirty);
   if (item.note !== saved && !dirty && !operation.pending && !failure?.unconfirmed) { setSaved(item.note); setDraft(item.note); }
   function accept(next: ShortlistItem) { setSaved(next.note); setDraft(next.note); setFailure(null); setError(undefined); setMessage("Saved note state confirmed."); router.refresh(); }
+  if (failure?.reason === "session_expired") return <ApiFeedback reason="session_expired" />;
   return (
     <form noValidate onSubmit={(event) => {
       event.preventDefault();
