@@ -1,0 +1,2 @@
+# Keep formatter output stable on Windows and fresh checkouts.
+* text=auto eol=lf

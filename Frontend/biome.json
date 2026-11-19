@@ -9,7 +9,10 @@
       "!!**/.flowbite-react/class-list.json",
       "!!**/.flowbite-react/init.tsx",
       "!!**/package-lock.json",
-      "!!**/next-env.d.ts"
+      "!!**/next-env.d.ts",
+      "!!**/*.md",
+      "!!**/*.markdown",
+      "!!**/*.mdx"
     ]
   },
   "formatter": {
