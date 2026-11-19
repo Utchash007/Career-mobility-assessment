@@ -9,7 +9,8 @@ Only health is exposed at Phase 1; business routes and authentication come later
 | --- | --- | --- |
 | 0 — scaffold and root environment loading | Completed previously | Historical results below |
 | 1 — DTOs, normalization, pagination and common errors | Implemented | Deferred to final phase |
-| 2–8 — database, authentication and business features | Pending | Deferred to final phase |
+| 2 — database models, initial migration and session dependency | Implemented; not applied to a database | Deferred to final phase |
+| 3–8 — authentication and business features | Pending | Deferred to final phase |
 | 9 — all tests and integration verification | Pending | Not run yet |
 
 Per project instruction, no tests, lint, format checks, health probes or application
@@ -95,8 +96,11 @@ There is no fixed development identity, token verification, password handling or
 `app/db/session.py` exposes lazy engine/session resources, with async SQLAlchemy,
 `asyncpg`, `pool_pre_ping`, bounded pooling and recycling. The lifespan disposes resources
 on shutdown; no engine is created at startup. Sessions do not auto-commit: future callers
-must explicitly own transactions. `app/db/base.py` is empty declarative metadata, not
-application schema. No database service or SQLite fixture is needed for setup tests.
+must explicitly own transactions. `app/db/base.py` provides declarative metadata for
+the three models in `app/db/models.py`. Integration tests
+will be added in Phase 9 and require a separate disposable Postgres target; SQLite is
+not supported for JSONB/ARRAY persistence. Do not use the root application's database
+as a destructive test fixture.
 
 The existing shared-file naming convention is supported (fake placeholders only):
 
@@ -115,16 +119,16 @@ Real Neon TLS connectivity, pooling and database operations have **not** been va
 Alembic uses the resolved direct URL with `NullPool`, never `DATABASE_URL_POOLED`.
 `DIRECT_URL` wins when set; otherwise the paired convention supplies the direct
 `DATABASE_URL`. A legacy `DATABASE_URL` supplied alone is not inferred to be direct.
-No revisions or application-table creation exist. This command needs no database:
+Revision `0001` creates `profiles`, `opportunities` and `shortlist`. It has been authored
+but **not applied or tested**. This command needs no database:
 
 ```powershell
 uv run --locked --managed-python alembic heads
 ```
 
-Do not run autogeneration against an existing database while metadata is empty: Alembic
-may propose dropping existing tables. Add reviewed models and revisions only in future
-schema work. `alembic current`/migration commands require your own direct URL and a
-reachable database; startup does not.
+Review migration SQL and confirm the intended database before applying it. Migrations
+do not run automatically at application startup. `alembic current`/migration commands
+require your own direct URL and a reachable database; startup does not.
 
 ## Checks
 
