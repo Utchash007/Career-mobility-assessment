@@ -4,14 +4,14 @@
 
 /* Color Hunt palette: EFECE3 / 8FABD4 / 4A70A9 / 000000. */
 @theme {
-  --color-canvas: #EFECE3;
-  --color-soft-accent: #8FABD4;
-  --color-accent: #4A70A9;
+  --color-canvas: #efece3;
+  --color-soft-accent: #8fabd4;
+  --color-accent: #4a70a9;
   --color-ink: #000000;
-  --color-action: #38547F;
-  --color-action-hover: #2D4366;
-  --color-critical: #991B1B;
-  --color-verification: #854D0E;
+  --color-action: #38547f;
+  --color-action-hover: #2d4366;
+  --color-critical: #991b1b;
+  --color-verification: #854d0e;
   --color-success: #166534;
 }
 

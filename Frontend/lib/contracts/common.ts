@@ -63,7 +63,7 @@ export function paginatedSchema<T extends z.ZodType>(itemSchema: T) {
       const pages = Math.ceil(pagination.total / pagination.page_size);
       if (
         pagination.total_pages !== pages ||
-        pagination.has_next !== (pagination.page < pages) ||
+        pagination.has_next !== pagination.page < pages ||
         pagination.has_previous !==
           (pagination.page > 1 && pagination.page <= pages) ||
         items.length > pagination.page_size ||

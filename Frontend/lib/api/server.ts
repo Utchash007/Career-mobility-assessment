@@ -6,9 +6,12 @@ import { createTransport } from "./transport.ts";
 
 export async function serverApi() {
   const session = await auth();
-  if (!session.isAuthenticated || session.sessionStatus !== "active") throw new ApiFailure("session_expired", 401);
-  return createApiClient(createTransport({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL,
-    getToken: () => session.getToken(),
-  }));
+  if (!session.isAuthenticated || session.sessionStatus !== "active")
+    throw new ApiFailure("session_expired", 401);
+  return createApiClient(
+    createTransport({
+      baseUrl: process.env.NEXT_PUBLIC_API_URL,
+      getToken: () => session.getToken(),
+    }),
+  );
 }

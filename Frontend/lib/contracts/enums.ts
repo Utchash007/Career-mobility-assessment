@@ -54,7 +54,12 @@ export const CRITERION_KEYS = [
 ] as const;
 export type CriterionKey = (typeof CRITERION_KEYS)[number];
 
-export const CRITERION_STATUSES = ["met", "partial", "unmet", "unknown"] as const;
+export const CRITERION_STATUSES = [
+  "met",
+  "partial",
+  "unmet",
+  "unknown",
+] as const;
 export type CriterionStatus = (typeof CRITERION_STATUSES)[number];
 
 export const MATCH_LABELS = [

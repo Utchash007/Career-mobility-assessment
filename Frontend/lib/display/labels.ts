@@ -37,7 +37,8 @@ export const WORK_AUTHORISATION_LABELS = {
   not_authorised: "Not authorised",
 } satisfies Record<WorkAuthorisationStatus, string>;
 
-export const WORK_AUTHORISATION_NOTICE = "Self-declared — requires verification";
+export const WORK_AUTHORISATION_NOTICE =
+  "Self-declared — requires verification";
 
 export const OPPORTUNITY_TYPE_LABELS = {
   job: "Job",
@@ -93,15 +94,11 @@ const languageCodes = new Set(LANGUAGE_CODES);
 
 export function countryLabel(code: string | null): string {
   if (code === null) return "Global remote";
-  return countryCodes.has(code)
-    ? (countryNames.of(code) ?? code)
-    : code;
+  return countryCodes.has(code) ? (countryNames.of(code) ?? code) : code;
 }
 
 export function languageLabel(code: string): string {
-  return languageCodes.has(code)
-    ? (languageNames.of(code) ?? code)
-    : code;
+  return languageCodes.has(code) ? (languageNames.of(code) ?? code) : code;
 }
 
 export function keyLabel(key: string): string {

@@ -1,5 +1,5 @@
-import type { ComponentProps } from "react";
 import type { ClerkProvider } from "@clerk/nextjs";
+import type { ComponentProps } from "react";
 import { THEME_COLORS } from "./palette.ts";
 
 export const CLERK_APPEARANCE = {

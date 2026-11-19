@@ -2,6 +2,6 @@
 
 import ErrorState from "@/components/ErrorState/ErrorState";
 
-export default function Error({ retry }: { retry: () => void }) {
+export default function RouteError({ retry }: { retry: () => void }) {
   return <ErrorState reason="unexpected" onRetry={retry} />;
 }

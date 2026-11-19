@@ -23,8 +23,14 @@ test("palette matches Color Hunt and the declared Tailwind theme", () => {
     "#4A70A9",
     "#000000",
   ]);
-  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  for (const color of [...Object.values(PALETTE), ...Object.values(THEME_COLORS)]) {
+  const css = readFileSync(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+  for (const color of [
+    ...Object.values(PALETTE),
+    ...Object.values(THEME_COLORS),
+  ]) {
     assert.ok(css.toUpperCase().includes(color.toUpperCase()), color);
   }
 });

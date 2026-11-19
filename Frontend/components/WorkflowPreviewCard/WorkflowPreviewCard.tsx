@@ -17,7 +17,9 @@ export default function WorkflowPreviewCard({
         <span className="flex size-10 items-center justify-center rounded-xl bg-soft-accent/40 text-sm font-semibold text-ink">
           {step}
         </span>
-        <span className="text-xs font-medium text-action">Planned workflow</span>
+        <span className="text-xs font-medium text-action">
+          Planned workflow
+        </span>
       </div>
       <h3 className="text-xl font-semibold tracking-tight text-ink">{title}</h3>
       <p className="text-sm leading-6 text-ink">{description}</p>

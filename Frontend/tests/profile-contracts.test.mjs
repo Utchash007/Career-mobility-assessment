@@ -25,7 +25,10 @@ test("minimal profile normalizes omitted data without inventing answers", () => 
     is_enrolled: null,
   });
   assert.deepEqual(profile.skills, []);
-  assert.deepEqual(profile.work_authorisation, { status: "unknown", countries: [] });
+  assert.deepEqual(profile.work_authorisation, {
+    status: "unknown",
+    countries: [],
+  });
 });
 
 test("read model cannot be submitted as a write, including nested extras", () => {

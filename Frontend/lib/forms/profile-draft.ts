@@ -107,7 +107,10 @@ export function parseProfileDraft(
     },
     experience_years: experienceValue(draft.experienceYears),
     skills: splitKeyInput(draft.skillsText),
-    languages: draft.languages.map(({ language, level }) => ({ language, level })),
+    languages: draft.languages.map(({ language, level }) => ({
+      language,
+      level,
+    })),
     preferred_locations: draft.preferredLocations,
     career_interests: splitKeyInput(draft.careerInterestsText),
     work_authorisation: {

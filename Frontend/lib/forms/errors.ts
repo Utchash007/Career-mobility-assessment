@@ -2,8 +2,14 @@ import type { ZodError } from "zod";
 
 export type FieldErrors = Record<string, string>;
 
-export function fieldError(fields: FieldErrors, path: string): string | undefined {
-  return fields[path] ?? Object.entries(fields).find(([key]) => key.startsWith(`${path}.`))?.[1];
+export function fieldError(
+  fields: FieldErrors,
+  path: string,
+): string | undefined {
+  return (
+    fields[path] ??
+    Object.entries(fields).find(([key]) => key.startsWith(`${path}.`))?.[1]
+  );
 }
 
 // Same dotted field paths as FastAPI, without logging or returning failed inputs.

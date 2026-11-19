@@ -24,7 +24,11 @@ export const storedKeySchema = z
 export const canonicalKeySchema = z
   .string()
   .transform((value) =>
-    value.normalize("NFKC").trim().toLowerCase().replace(/[\s-]+/g, "_"),
+    value
+      .normalize("NFKC")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_"),
   )
   .pipe(storedKeySchema);
 
@@ -34,7 +38,10 @@ export const skillKeySchema = canonicalKeySchema.transform((key) =>
 
 export const exactCountryCodeSchema = z
   .string()
-  .refine((value) => countries.has(value), "Use an uppercase ISO country code.");
+  .refine(
+    (value) => countries.has(value),
+    "Use an uppercase ISO country code.",
+  );
 
 export const countryCodeSchema = z
   .string()
@@ -48,11 +55,16 @@ export const countryCodeSchema = z
 
 export const exactLanguageCodeSchema = z
   .string()
-  .refine((value) => languages.has(value), "Use a lowercase ISO language code.");
+  .refine(
+    (value) => languages.has(value),
+    "Use a lowercase ISO language code.",
+  );
 
 export const languageCodeSchema = z
   .string()
-  .transform((value) => aliasOrKey(LANGUAGE_ALIASES, value.trim().toLowerCase()))
+  .transform((value) =>
+    aliasOrKey(LANGUAGE_ALIASES, value.trim().toLowerCase()),
+  )
   .pipe(exactLanguageCodeSchema);
 
 // Backend normalization deduplicates first, then applies collection limits.

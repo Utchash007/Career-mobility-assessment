@@ -42,9 +42,15 @@ test("invalid pagination fails instead of falling back or truncating", () => {
     "page_size=0",
     "page=9007199254740992",
   ]) {
-    assert.throws(() => parseOpportunityQuery(new URLSearchParams(query)), query);
+    assert.throws(
+      () => parseOpportunityQuery(new URLSearchParams(query)),
+      query,
+    );
   }
-  assert.equal(parseOpportunityQuery({ page: "001", page_size: "100" }).page, 1);
+  assert.equal(
+    parseOpportunityQuery({ page: "001", page_size: "100" }).page,
+    1,
+  );
 });
 
 test("duplicates and unsupported parameters are never silently forwarded", () => {
@@ -54,7 +60,10 @@ test("duplicates and unsupported parameters are never silently forwarded", () =>
     "unknown=1",
     "user_id=user_fixture",
   ]) {
-    assert.throws(() => parseOpportunityQuery(new URLSearchParams(query)), query);
+    assert.throws(
+      () => parseOpportunityQuery(new URLSearchParams(query)),
+      query,
+    );
   }
   assert.throws(() => parseMatchQuery({ page: ["1", "2"] }));
   assert.throws(() => parseMatchQuery({ sort: "id_asc" }));
@@ -73,7 +82,10 @@ test("URL filters are exact and supplied blanks are invalid", () => {
     "work_mode=REMOTE",
     "work_mode=",
   ]) {
-    assert.throws(() => parseOpportunityQuery(new URLSearchParams(query)), query);
+    assert.throws(
+      () => parseOpportunityQuery(new URLSearchParams(query)),
+      query,
+    );
   }
   assert.throws(() => parseMatchQuery({ label: "unsupported" }));
   assert.equal(parseOpportunityQuery({ country: "NZ" }).country, "NZ");
@@ -95,7 +107,10 @@ test("round trips retain query text literally and use single-valued parameters",
   assert.equal(serializeMatchQuery(matches).has("sort"), false);
   assert.deepEqual(parseMatchQuery(serializeMatchQuery(matches)), matches);
   const shortlist = parseShortlistQuery({ sort: "title_asc" });
-  assert.deepEqual(parseShortlistQuery(serializeShortlistQuery(shortlist)), shortlist);
+  assert.deepEqual(
+    parseShortlistQuery(serializeShortlistQuery(shortlist)),
+    shortlist,
+  );
 });
 
 test("applying filters or page size always resets page and omits blank choices", () => {

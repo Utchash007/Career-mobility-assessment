@@ -31,21 +31,34 @@ export const APP_THEME = {
     color: { default: "fill-action" },
   },
   textInput: {
-    field: { input: { colors: {
-      gray: "border-action/40 bg-canvas text-ink placeholder-ink/60 focus:border-action focus:ring-action",
-      failure: "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
-    } } },
+    field: {
+      input: {
+        colors: {
+          gray: "border-action/40 bg-canvas text-ink placeholder-ink/60 focus:border-action focus:ring-action",
+          failure:
+            "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
+        },
+      },
+    },
   },
   select: {
-    field: { select: { colors: {
-      gray: "border-action/40 bg-canvas text-ink focus:border-action focus:ring-action",
-      failure: "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
-    } } },
+    field: {
+      select: {
+        colors: {
+          gray: "border-action/40 bg-canvas text-ink focus:border-action focus:ring-action",
+          failure:
+            "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
+        },
+      },
+    },
   },
-  textarea: { colors: {
-    gray: "border-action/40 bg-canvas text-ink focus:border-action focus:ring-action",
-    failure: "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
-  } },
+  textarea: {
+    colors: {
+      gray: "border-action/40 bg-canvas text-ink focus:border-action focus:ring-action",
+      failure:
+        "border-critical bg-canvas text-ink focus:border-critical focus:ring-critical",
+    },
+  },
   progress: {
     base: "w-full overflow-hidden rounded-full bg-soft-accent/40",
     label: "mb-1 flex justify-between font-medium text-ink",

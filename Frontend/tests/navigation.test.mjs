@@ -30,8 +30,14 @@ test("home does not become active on every nested route", () => {
 
 test("collections stay active for details but not similar route prefixes", () => {
   assert.equal(isActiveRoute("/opportunities", APP_ROUTES.opportunities), true);
-  assert.equal(isActiveRoute("/opportunities/12", APP_ROUTES.opportunities), true);
-  assert.equal(isActiveRoute("/opportunities/", APP_ROUTES.opportunities), true);
+  assert.equal(
+    isActiveRoute("/opportunities/12", APP_ROUTES.opportunities),
+    true,
+  );
+  assert.equal(
+    isActiveRoute("/opportunities/", APP_ROUTES.opportunities),
+    true,
+  );
   for (const path of [
     "/opportunities-other",
     "/opportunities2/12",

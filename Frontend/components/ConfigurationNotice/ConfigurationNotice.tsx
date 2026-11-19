@@ -8,7 +8,9 @@ export interface ConfigurationNoticeProps {
   kind: ConfigurationKind;
 }
 
-export default function ConfigurationNotice({ kind }: ConfigurationNoticeProps) {
+export default function ConfigurationNotice({
+  kind,
+}: ConfigurationNoticeProps) {
   const copy = CONFIGURATION_COPY[kind];
 
   return (

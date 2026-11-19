@@ -88,7 +88,10 @@ export const matchResultSchema = z
   }) satisfies z.ZodType<MatchResult>;
 
 export const matchListItemSchema = z
-  .strictObject({ opportunity: opportunitySummarySchema, match: matchResultSchema })
+  .strictObject({
+    opportunity: opportunitySummarySchema,
+    match: matchResultSchema,
+  })
   .superRefine((value, context) => {
     if (value.opportunity.id !== value.match.opportunity_id) {
       context.addIssue({

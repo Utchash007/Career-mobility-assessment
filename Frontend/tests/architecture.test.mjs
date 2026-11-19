@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -94,6 +94,14 @@ test("pure logic and hooks never define UI", () => {
   }
 });
 
+test("component-valued Flowbite link props stay inside client boundaries", () => {
+  for (const path of sourceFiles(join(frontend, "components"))) {
+    const source = readFileSync(path, "utf8");
+    if (source.includes("as={Link}"))
+      assert.match(source, /^"use client";/, path);
+  }
+});
+
 test("components are never defined inside other functions", () => {
   for (const root of ["components", "app"]) {
     for (const path of sourceFiles(join(frontend, root))) {
@@ -138,7 +146,8 @@ test("Next entrypoints only render imported components and required root tags", 
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
         const name = node.tagName.getText(source);
         assert.ok(
-          importedNames.has(name) || (rootLayout && ["html", "body"].includes(name)),
+          importedNames.has(name) ||
+            (rootLayout && ["html", "body"].includes(name)),
           `${relative(frontend, path)} must not define inline UI: ${name}`,
         );
       }

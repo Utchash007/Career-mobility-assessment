@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-const component = (name) => readFileSync(new URL(`../components/${name}/${name}.tsx`, import.meta.url), "utf8");
+
+const component = (name) =>
+  readFileSync(
+    new URL(`../components/${name}/${name}.tsx`, import.meta.url),
+    "utf8",
+  );
 
 test("dashboard counts use backend pagination and exclude birthday from summary", () => {
   const source = component("DashboardScreen");

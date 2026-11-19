@@ -1,11 +1,28 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-const component = (name) => readFileSync(new URL(`../components/${name}/${name}.tsx`, import.meta.url), "utf8");
+
+const component = (name) =>
+  readFileSync(
+    new URL(`../components/${name}/${name}.tsx`, import.meta.url),
+    "utf8",
+  );
 
 test("profile leaves are controlled and never perform persistence", () => {
-  for (const name of ["ProfileIdentityFields", "EducationFields", "ExperienceFields", "SkillsFields", "LanguageRow", "LanguageFields", "PreferenceFields", "WorkAuthorisationFields"]) {
-    assert.doesNotMatch(component(name), /useState|useEffect|useApi\(|fetch\(|localStorage|sessionStorage/);
+  for (const name of [
+    "ProfileIdentityFields",
+    "EducationFields",
+    "ExperienceFields",
+    "SkillsFields",
+    "LanguageRow",
+    "LanguageFields",
+    "PreferenceFields",
+    "WorkAuthorisationFields",
+  ]) {
+    assert.doesNotMatch(
+      component(name),
+      /useState|useEffect|useApi\(|fetch\(|localStorage|sessionStorage/,
+    );
   }
 });
 

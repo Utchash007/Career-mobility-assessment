@@ -88,7 +88,9 @@ export const shortlistQuerySchema = z.strictObject({
 function queryObject(source: QuerySource): Record<string, string> {
   const result: Record<string, string> = Object.create(null);
   const entries =
-    source instanceof URLSearchParams ? source.entries() : Object.entries(source);
+    source instanceof URLSearchParams
+      ? source.entries()
+      : Object.entries(source);
   for (const [name, value] of entries) {
     if (value === undefined) continue;
     if (Object.hasOwn(result, name) || Array.isArray(value)) {
@@ -117,7 +119,9 @@ export function parseShortlistQuery(source: QuerySource): ShortlistQuery {
   return shortlistQuerySchema.parse(queryObject(source));
 }
 
-function serializeQuery(query: CollectionQuery & { sort?: string; label?: string }) {
+function serializeQuery(
+  query: CollectionQuery & { sort?: string; label?: string },
+) {
   const result = new URLSearchParams();
   result.set("page", String(query.page));
   result.set("page_size", String(query.page_size));
@@ -145,7 +149,9 @@ export function serializeMatchQuery(query: MatchQuery): URLSearchParams {
   return serializeQuery(matchQuerySchema.parse(query));
 }
 
-export function serializeShortlistQuery(query: ShortlistQuery): URLSearchParams {
+export function serializeShortlistQuery(
+  query: ShortlistQuery,
+): URLSearchParams {
   return serializeQuery(shortlistQuerySchema.parse(query));
 }
 
@@ -165,7 +171,10 @@ export function applyOpportunityFilters(
   draft: CollectionFilterDraft & { sort: OpportunitySort },
 ): URLSearchParams {
   return serializeQuery(
-    opportunityQuerySchema.parse({ ...appliedFilters(draft), sort: draft.sort }),
+    opportunityQuerySchema.parse({
+      ...appliedFilters(draft),
+      sort: draft.sort,
+    }),
   );
 }
 

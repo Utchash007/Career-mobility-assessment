@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const read = (path) =>
+  readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const component = (name) => read(`components/${name}/${name}.tsx`);
 
 test("Clerk provider stays server-side and never serializes a secret", () => {
@@ -11,7 +12,10 @@ test("Clerk provider stays server-side and never serializes a secret", () => {
   assert.match(source, /ClerkProvider/);
   assert.match(read("lib/auth/config.ts"), /import "server-only"/);
   assert.match(read("lib/api/server.ts"), /import "server-only"/);
-  assert.match(read("next.config.ts"), /NEXT_PUBLIC_CLERK_KEYLESS_DISABLED = "true"/);
+  assert.match(
+    read("next.config.ts"),
+    /NEXT_PUBLIC_CLERK_KEYLESS_DISABLED = "true"/,
+  );
 });
 
 test("proxy uses bare Clerk middleware; missing config can only show setup", () => {
@@ -24,12 +28,17 @@ test("proxy uses bare Clerk middleware; missing config can only show setup", () 
 
 test("each protected page checks authorization before rendering", () => {
   function check(directory) {
-    for (const entry of readdirSync(new URL(`../${directory}`, import.meta.url), { withFileTypes: true })) {
+    for (const entry of readdirSync(
+      new URL(`../${directory}`, import.meta.url),
+      { withFileTypes: true },
+    )) {
       if (entry.isDirectory()) check(`${directory}/${entry.name}`);
       else if (entry.name === "page.tsx") {
         const source = read(`${directory}/${entry.name}`);
         assert.match(source, /await auth\.protect\(\)/);
-        assert.ok(source.indexOf("await auth.protect()") < source.indexOf("return <"));
+        assert.ok(
+          source.indexOf("await auth.protect()") < source.indexOf("return <"),
+        );
       }
     }
   }
@@ -47,8 +56,11 @@ test("session boundary hides stale server content and remounts client drafts", (
 });
 
 test("auth screens compose prebuilt Clerk UI, never custom password forms", () => {
-  for (const [name, widget] of [["SignInScreen", "SignIn"], ["SignUpScreen", "SignUp"]]) {
-    assert.match(component(name), new RegExp(`<${widget} routing="path"`));
+  for (const [name, widget] of [
+    ["SignInScreen", "SignIn"],
+    ["SignUpScreen", "SignUp"],
+  ]) {
+    assert.match(component(name), new RegExp(`<${widget}\\s+routing="path"`));
     assert.doesNotMatch(component(name), /type="password"|<form|fetch\(/);
   }
 });

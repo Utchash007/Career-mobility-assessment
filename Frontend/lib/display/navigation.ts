@@ -33,7 +33,10 @@ export const NAVIGATION_ITEMS = [
   { href: APP_ROUTES.account, label: "Account", availability: "available" },
 ] as const satisfies readonly NavigationItem[];
 
-export function isActiveRoute(pathname: string | null, href: AppRoute): boolean {
+export function isActiveRoute(
+  pathname: string | null,
+  href: AppRoute,
+): boolean {
   if (pathname === null) return false;
   return pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 }

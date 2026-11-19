@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import {
-  CONFIGURATION_COPY,
-  ERROR_COPY,
-} from "../lib/display/feedback.ts";
+import { CONFIGURATION_COPY, ERROR_COPY } from "../lib/display/feedback.ts";
 import { APP_THEME } from "../lib/display/flowbite-theme.ts";
 
 // These are source/pure-data checks, not renderer, hydration or browser tests.
@@ -79,11 +76,20 @@ test("the shell owns one focusable main landmark and a working skip target in so
 
 test("the provider initializes the generated light theme before its child subtree", () => {
   const source = component("FlowbiteProvider");
-  assert.match(source, /import \{ ThemeInit \} from "@\/\.flowbite-react\/init"/);
-  assert.match(source, /ThemeProvider theme=\{APP_THEME\} applyTheme="replace"/);
+  assert.match(
+    source,
+    /import \{ ThemeInit \} from "@\/\.flowbite-react\/init"/,
+  );
+  assert.match(
+    source,
+    /ThemeProvider theme=\{APP_THEME\} applyTheme="replace"/,
+  );
   assert.ok(source.indexOf("<ThemeInit />") < source.indexOf("{children}"));
   const config = JSON.parse(
-    readFileSync(new URL("../.flowbite-react/config.json", import.meta.url), "utf8"),
+    readFileSync(
+      new URL("../.flowbite-react/config.json", import.meta.url),
+      "utf8",
+    ),
   );
   assert.equal(config.dark, false);
   assert.equal(config.version, 4);

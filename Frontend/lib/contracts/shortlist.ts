@@ -29,7 +29,10 @@ export interface ShortlistItem {
 // No trimming: an explicit empty string clears; omission preserves the old note.
 export const noteSchema = z
   .string()
-  .refine((value) => characterCount(value) <= 500, "Use at most 500 characters.");
+  .refine(
+    (value) => characterCount(value) <= 500,
+    "Use at most 500 characters.",
+  );
 
 export const shortlistSaveSchema = z.strictObject({
   note: noteSchema.optional(),
@@ -55,7 +58,8 @@ export const shortlistItemSchema = z
       context.addIssue({
         code: "custom",
         path: ["opportunity"],
-        message: "Saved opportunity state is inconsistent. Refresh to try again.",
+        message:
+          "Saved opportunity state is inconsistent. Refresh to try again.",
       });
     }
   }) satisfies z.ZodType<ShortlistItem>;

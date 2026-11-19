@@ -33,7 +33,9 @@ export function asApiFailure(error: unknown): ApiFailure {
 }
 
 export function isMissingProfile(error: unknown): boolean {
-  return error instanceof ApiFailure &&
+  return (
+    error instanceof ApiFailure &&
     ((error.status === 404 && error.code === "PROFILE_NOT_FOUND") ||
-      (error.status === 409 && error.code === "PROFILE_REQUIRED"));
+      (error.status === 409 && error.code === "PROFILE_REQUIRED"))
+  );
 }

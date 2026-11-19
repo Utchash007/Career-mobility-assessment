@@ -9,9 +9,16 @@ export interface AppProvidersProps {
 }
 
 export default function AppProviders({ children }: AppProvidersProps) {
-  if (!authenticationConfigured()) return <FlowbiteProvider>{children}</FlowbiteProvider>;
+  if (!authenticationConfigured())
+    return <FlowbiteProvider>{children}</FlowbiteProvider>;
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" appearance={CLERK_APPEARANCE}>
+    <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+      appearance={CLERK_APPEARANCE}
+    >
       <FlowbiteProvider>{children}</FlowbiteProvider>
     </ClerkProvider>
   );

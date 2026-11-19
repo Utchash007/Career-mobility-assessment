@@ -9,7 +9,10 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId } from "react";
-import { isActiveRoute, type NavigationItem } from "@/lib/display/navigation.ts";
+import {
+  isActiveRoute,
+  type NavigationItem,
+} from "@/lib/display/navigation.ts";
 
 export interface NavigationMenuProps {
   items: readonly NavigationItem[];

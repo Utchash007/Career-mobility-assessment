@@ -5,7 +5,9 @@ export interface ProfileRequiredStateProps {
   action?: ReactNode;
 }
 
-export default function ProfileRequiredState({ action }: ProfileRequiredStateProps) {
+export default function ProfileRequiredState({
+  action,
+}: ProfileRequiredStateProps) {
   return (
     <EmptyState
       title="A profile is required"

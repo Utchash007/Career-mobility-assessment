@@ -1,5 +1,9 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
-import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import {
+  type NextFetchEvent,
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 import { authenticationConfigured } from "@/lib/auth/config.ts";
 
 const authenticate = clerkMiddleware();
