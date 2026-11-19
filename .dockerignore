@@ -1,4 +1,4 @@
-# Build with Backend as the context. Never send local credentials to Docker.
+# Repository-root context: never send credentials or local tooling to Docker.
 **/.env*
 **/*.env
 **/*.env.*
@@ -35,6 +35,6 @@
 **/*.[mM][aA][rR][kK][dD][oO][wW][nN]
 **/*.[mM][dD][xX]
 !**/[rR][eE][aA][dD][mM][eE].[mM][dD]
-tests
+**/tests
 Dockerfile
 .dockerignore

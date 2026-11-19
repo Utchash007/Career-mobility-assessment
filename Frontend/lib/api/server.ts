@@ -17,7 +17,7 @@ export async function serverApi() {
     throw new ApiFailure("session_expired", 401);
   return createApiClient(
     createTransport({
-      baseUrl: process.env.NEXT_PUBLIC_API_URL,
+      baseUrl: process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL,
       getToken: () => session.getToken(),
     }),
   );

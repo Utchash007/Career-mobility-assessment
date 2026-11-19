@@ -163,27 +163,30 @@ network requests, including when a database URL is supplied.
 
 ## Render Docker service
 
-Use `Backend/Dockerfile` with Root Directory `Backend`, Dockerfile Path
-`./Dockerfile`, Docker Build Context `.` and branch `Frontend` (which includes both
-services). Leave Docker Command empty and set Health Check Path to `/health`.
-Use a public Docker Web Service: browser API mutations need its public HTTPS URL.
+Use the **repository-root `Dockerfile` for one Render service running both apps**.
+Leave Root Directory and Docker Command empty; use Dockerfile Path `./Dockerfile`,
+Docker Build Context `.`, branch `Frontend` and Health Check Path `/health`.
+Do not create a separate backend service.
 
 The multi-stage image uses Python 3.13.18 and pinned uv 0.13.9 to install only
 production dependencies from `uv.lock`. Its non-root runtime starts the Uvicorn
-application factory on `0.0.0.0` and Render's `PORT` (default `10000`), without
-development reload or dependency installation at startup.
+application factory on private `127.0.0.1:8000`, without development reload or
+dependency installation at startup. Next.js serves Render's public `PORT` and
+forwards `/api/v1/*` and `/health` here. All API authentication, resource ownership
+and mutations remain in FastAPI; proxying does not bypass bearer verification.
 
 All backend configuration comes from Render Environment settings at runtime;
 there are no secret build arguments or embedded `.env` files. Set `ENV=production`,
 `AUTH_MODE=clerk`, the trusted Clerk instance's publishable key and PEM
 `JWKS_PUBLIC_KEY`, both frontend-origin JSON lists, and your Postgres URLs. Use the
-deployed frontend HTTPS origin in both lists, not localhost or the backend URL.
+single service's public HTTPS origin in both lists, not the private loopback URL.
 The backend does not consume `CLERK_SECRET_KEY`. See the root README for the full
-two-service environment table and frontend rebuild requirements.
+single-service environment table and frontend rebuild requirements. The Dockerfile
+contains the launcher that stops both apps if either exits or Render shuts down.
 
 The image includes Alembic but does not migrate or seed the database on startup.
 Only run `alembic upgrade head` separately for an authorized target database with
-a direct URL configured. `.dockerignore` keeps local secrets, environments, caches,
+a direct URL configured. The root `.dockerignore` keeps local secrets, environments, caches,
 tests and non-README Markdown out of the context. No container builds, tests or live
 requests were run for this packaging change.
 

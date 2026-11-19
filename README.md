@@ -1,7 +1,7 @@
 # Career Mobility Platform
 
 **Latest deployment/auth/UI edits:** verification was stopped at the user's request.
-The Dockerfiles, standalone/request-time frontend configuration, session-status fix
+The single-service Dockerfile, standalone/request-time frontend configuration, session-status fix
 and avatar-placement change have not been built or tested. The redirect follow-up
 has no completed final build. Earlier results below apply to previously verified code.
 The local root `.env` origin allowlists were corrected to accept both localhost:3000
@@ -46,64 +46,66 @@ Stop either development server with `Ctrl+C`.
 
 ## Deploy to Render with Docker (no Compose)
 
-Create **two Docker Web Services** from this repository, both using branch
-`Frontend`. Leave the Docker Command override empty so each Dockerfile's `CMD`
-starts its service. Both listen on `0.0.0.0` and Render's runtime `PORT`
-(default `10000`). No Compose, Blueprint or environment file is required.
+Create **one Docker Web Service** using the repository-root `Dockerfile`. It builds
+and runs **both Next.js and FastAPI in one container**. Do not create a second
+Render service. There is no Compose, Blueprint or separate launcher file.
 
-| Render setting | Frontend service | Backend service |
-| --- | --- | --- |
-| Language | Docker | Docker |
-| Root Directory | `Frontend` | `Backend` |
-| Dockerfile Path | `./Dockerfile` | `./Dockerfile` |
-| Docker Build Context | `.` | `.` |
-| Health Check Path | `/api/health` | `/health` |
-
-Paths are relative to the selected Root Directory. The backend must be a public
-Web Service because browser mutations call it directly, not through Next.js.
-
-Set these values in each service's **Render Environment** settings, not in Git:
-
-| Frontend variable | Value |
+| Render setting | Value |
 | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Backend's public HTTPS origin, e.g. `https://career-api.onrender.com`, without `/api/v1` |
+| Language | Docker |
+| Branch | `Frontend` |
+| Root Directory | Leave empty (repository root) |
+| Dockerfile Path | `./Dockerfile` |
+| Docker Build Context | `.` |
+| Docker Command | Leave empty |
+| Health Check Path | `/health` |
+
+Next.js listens on `0.0.0.0` and Render's `PORT` (default `10000`). FastAPI listens
+only on `127.0.0.1:8000` inside the same container. Next.js forwards `/api/v1/*`
+requests and `/health` to FastAPI without implementing business logic or modifying
+bearer tokens. FastAPI still verifies every protected API request. Browser calls
+use the **same public origin** as the frontend; server-side reads use the private
+loopback URL. `/health` goes through both servers, while `/api/health` checks only
+Next.js. Neither checks the database or live Clerk service.
+
+The Dockerfile contains its entire lifecycle launcher. Tini handles PID 1 duties;
+Bash starts both servers and stops both if either exits or Render shuts down the
+container. Both apps run as a non-root user. CPU and memory are shared by both apps.
+
+Put **all** configuration in this one service's **Render Environment** settings:
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | **This same service's** public HTTPS origin, e.g. `https://career-mobility.onrender.com`, without `/api/v1` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Your Clerk instance's publishable key |
 | `CLERK_SECRET_KEY` | Same instance's server secret key; runtime only |
-
-| Backend variable | Value |
-| --- | --- |
 | `ENV` | `production` |
 | `AUTH_MODE` | `clerk` (fail startup if trusted auth configuration is missing) |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Same Clerk instance; used to determine the trusted issuer |
 | `JWKS_PUBLIC_KEY` | That instance's PEM public signing key; actual or escaped newlines |
-| `CORS_ORIGINS` | Exact frontend origin as JSON, e.g. `["https://career-web.onrender.com"]` |
-| `CLERK_AUTHORIZED_PARTIES` | Same exact frontend-origin JSON list |
+| `CORS_ORIGINS` | The same service origin as JSON, e.g. `["https://career-mobility.onrender.com"]` |
+| `CLERK_AUTHORIZED_PARTIES` | Same exact public-origin JSON list; **not** `127.0.0.1:8000` |
 | `DATABASE_URL` | Direct Postgres URL when paired with `DATABASE_URL_POOLED` |
 | `DATABASE_URL_POOLED` | Pooled Postgres URL used for application connections |
 | `DIRECT_URL` | Optional explicit direct URL for separately authorized migrations |
 
-Replace the example service names with your actual Render URLs. Update both backend
-origin lists if you add a custom frontend domain. Configure your production Clerk
-instance for the deployed frontend domain; do not add a hard-coded admin token claim.
-`CLERK_SECRET_KEY` is not required on the backend, and database credentials are not
-required on the frontend.
+Replace the example hostname with your actual Render hostname. Update both origin
+lists if you add a custom domain. Configure your production Clerk instance for that
+public domain; no hard-coded admin token claim is needed. The Dockerfile sets
+`API_INTERNAL_URL` and `PANAMA_SINGLE_CONTAINER` automatically; do not override them.
 
-Render makes its environment settings available both at runtime and as Docker build
-arguments. The frontend Dockerfile consumes **only** the two `NEXT_PUBLIC_*`
-arguments, because Next.js embeds them in browser bundles. Set both before the first
-frontend build; changing either later requires a rebuild (Render's save-and-rebuild
-option), not merely a restart. No secret build arguments are declared in either
-Dockerfile. Frontend rendering is request-time so Clerk's secret key is needed only
-at runtime; it is never supplied to `npm run build` or stored in an image layer.
-Both `.dockerignore` files exclude environment files, credentials, agent folders,
-dependencies, caches and non-README Markdown from the build context.
+Render supplies environment settings at runtime and as Docker build arguments.
+Only the two public `NEXT_PUBLIC_*` arguments are consumed by the frontend build.
+Set both before the first build; changes require rebuilding, not just restarting.
+Clerk's secret and database credentials are runtime-only: no secret build arguments
+are declared and no `.env` is included in the image. Request-time frontend rendering
+avoids requiring Clerk secrets during the build. The root `.dockerignore` excludes
+local credentials, agent folders, dependencies, caches and non-README Markdown.
 
-Containers do **not** run migrations or seed data on startup. If you deploy against
-a new database, separately authorize and run `alembic upgrade head` using the
-backend image's shell or Render Pre-Deploy Command (where your plan supports it),
-with a direct URL configured. Do not point migration commands at an unapproved
-database. The current Dockerfiles have been source-reviewed only, not built or
-deployed, per the no-tests/no-builds instruction.
+The container does **not** run migrations or seed data at startup. For a separately
+authorized new database, use `cd /app/Backend && alembic upgrade head` in Render's
+shell or Pre-Deploy Command (where your plan supports it), with a direct URL set.
+Do not migrate an unapproved database. This single-service correction is
+source-reviewed only, not built, tested or deployed, per the user's instruction.
 
 ## Configuration and dependency safety
 

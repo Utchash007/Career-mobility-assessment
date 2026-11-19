@@ -367,17 +367,18 @@ Browser interaction and live identity isolation remain unverified.
 
 ## Render Docker service
 
-Use `Frontend/Dockerfile` with Root Directory `Frontend`, Dockerfile Path
-`./Dockerfile`, Docker Build Context `.` and branch `Frontend`. Leave Docker Command
-empty and set Health Check Path to `/api/health`. The production image runs the
-standalone Next.js server as the non-root `node` user, binds to `0.0.0.0`, and uses
-Render's `PORT` (default `10000`). No Compose or startup script is needed.
+Use the **repository-root `Dockerfile` for one Render service running both apps**.
+Leave Root Directory and Docker Command empty; use Dockerfile Path `./Dockerfile`,
+Docker Build Context `.`, branch `Frontend` and Health Check Path `/health`.
+Next.js binds to `0.0.0.0` and Render's `PORT` (default `10000`); FastAPI is private
+on loopback port 8000. The launcher is embedded in the Dockerfile. No Compose or
+separate backend Render service is needed.
 
 Set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
 in this service's Render Environment settings. The first two public values are the
 only declared build arguments; set them before building. Render also supplies all
 configured variables at runtime. Do not declare a `CLERK_SECRET_KEY` build argument
-or copy an environment file into the image. `.dockerignore` excludes local secrets,
+or copy an environment file into the image. The root `.dockerignore` excludes local secrets,
 dependencies, caches, tests and non-README Markdown from the build context.
 
 `next.config.ts` uses `output: "standalone"`; the final image copies only its traced
@@ -387,9 +388,15 @@ unconfigured provider or require secret credentials during prerendering. Local
 root `.env` fallback still works outside Docker; no environment file is included
 in Render images. Rebuild after changing either public value, not just restart.
 
-Use the backend's public HTTPS origin for `NEXT_PUBLIC_API_URL`, without an API
-path prefix. Match both backend origin lists to the actual deployed frontend URL.
-See the root README for the two-service settings and backend environment table.
+Set `NEXT_PUBLIC_API_URL` to **this same Render service's public HTTPS origin**,
+without an API path prefix. In Docker mode, `next.config.ts` rewrites `/api/v1/*`
+and `/health` to FastAPI on `127.0.0.1:8000`; the proxy delegates authentication of
+these API requests to FastAPI, while protected app pages keep their Clerk checks.
+Browser mutations still execute in FastAPI, with no Next.js business API added.
+`serverApi()` uses the Docker-provided `API_INTERNAL_URL` for private server reads;
+outside Docker it falls back to the existing public API URL. Match both backend
+origin lists to the public service URL, not its internal loopback address.
+See the root README for the single-service settings and combined environment table.
 No Docker build, runtime probe, tests or live authentication calls were performed
 for this packaging change.
 
