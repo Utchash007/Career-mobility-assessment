@@ -12,7 +12,26 @@ Health is public; implemented business routes are protected by Clerk verificatio
 | 2 — database models, initial migration and session dependency | Implemented; revision 0001 applied to the authorized root database | Tests deferred to final phase |
 | 3 — Clerk verification and protected API boundary | Implemented | Deferred to final phase |
 | 4 — profile read, complete replacement and sample loading | Implemented | Deferred to final phase |
-| 5–8 — opportunities, matching and shortlist | Pending | Deferred to final phase |
+| 5 — validated seed command and opportunity discovery | Implemented; seed writes not run | Deferred to final phase |
+| 6–8 — matching and shortlist | Pending | Deferred to final phase |
+
+### Opportunities and explicit seed command
+
+`GET /api/v1/opportunities` supports page/page_size, q, country, type, work_mode and
+id_asc/title_asc/title_desc sorting. Detail: `GET /api/v1/opportunities/{opportunity_id}`.
+Browsing needs a verified session, not a saved profile. Saved state is current-user-only.
+The twelve-role prototype reads a filtered collection once then pages it in memory,
+keeping totals and items from the same logical snapshot; this is not a bulk-export API.
+
+`app/data/seed_opportunities.json` contains twelve fictional roles. The seed loader
+validates the complete fixture before starting one atomic upsert-by-slug transaction.
+It preserves opportunity IDs, unrelated rows and unchanged timestamps; it never truncates
+tables or runs on startup. Migration authorization does not implicitly execute this seed.
+After confirming the intended target, run from `Backend/`:
+
+```powershell
+uv run --locked --managed-python python -m app.db.seed --apply
+```
 
 ### Profile routes
 

@@ -1,0 +1,123 @@
+[
+  {
+    "slug": "programme-assistant-berlin", "title": "Programme Assistant, International NGO", "organisation": "Global Futures NGO",
+    "description": "Fictional role supporting international programme reporting, research and stakeholder coordination. Assist project teams with evidence gathering and clear written updates.",
+    "country": "DE", "city": "Berlin", "type": "job", "experience_level": "entry", "min_years": 1, "max_years": 2,
+    "required_skills": ["reporting", "project_coordination", "stakeholder_communication", "research", "presentation"], "preferred_skills": ["excel"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["business", "social_science"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Local work eligibility required", "severity": "critical", "params": {"country": "DE", "sponsorship": null}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "business-analyst-intern-toronto", "title": "Business Analyst Intern, Technology Firm", "organisation": "Maple Bridge Technology",
+    "description": "Fictional student internship analysing product operations with Excel, data analysis and presentations. Applicants must currently be enrolled; local work eligibility is required and sponsorship is unavailable.",
+    "country": "CA", "city": "Toronto", "type": "internship", "experience_level": "internship", "min_years": 0, "max_years": 1,
+    "required_skills": ["data_analysis", "excel", "presentation"], "preferred_skills": ["research"],
+    "education_requirements": {"required": {"min_level": "high_school", "related_fields": []}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [
+      {"code": "enrolment", "label": "Must be currently enrolled", "severity": "critical", "params": {}},
+      {"code": "work_authorisation", "label": "Canadian work eligibility; no sponsorship", "severity": "critical", "params": {"country": "CA", "sponsorship": false}}
+    ], "work_mode": "hybrid"
+  },
+  {
+    "slug": "german-client-associate-munich", "title": "German-speaking Client Associate", "organisation": "Alpine Client Services",
+    "description": "Fictional client service position handling German-language enquiries and account updates. Professional German is a hard requirement; customer support experience is valuable.",
+    "country": "DE", "city": "Munich", "type": "job", "experience_level": "entry", "min_years": 1, "max_years": 3,
+    "required_skills": ["customer_support", "stakeholder_communication"], "preferred_skills": ["reporting"],
+    "education_requirements": {"required": {"min_level": "diploma", "related_fields": []}},
+    "languages": [{"language": "de", "min_level": "professional", "required": true}, {"language": "en", "min_level": "conversational", "required": false}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "German work eligibility required", "severity": "critical", "params": {"country": "DE", "sponsorship": null}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "project-coordinator-vancouver", "title": "Project Coordinator, Sustainability NGO", "organisation": "Evergreen Impact Collective",
+    "description": "Fictional sustainability project role coordinating schedules, stakeholder updates and reporting. Collaborate with research teams to track delivery and communicate results.",
+    "country": "CA", "city": "Vancouver", "type": "job", "experience_level": "mid", "min_years": 2, "max_years": 4,
+    "required_skills": ["project_coordination", "stakeholder_communication", "reporting"], "preferred_skills": ["research", "excel"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["business", "social_science"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Canadian work eligibility required", "severity": "critical", "params": {"country": "CA", "sponsorship": true}}],
+    "work_mode": "hybrid"
+  },
+  {
+    "slug": "business-operations-singapore", "title": "Business Operations Associate, FinTech", "organisation": "Harbour Ledger Labs",
+    "description": "Fictional operations position improving routine reporting and business processes. A Singapore work pass must be arranged independently; this employer does not sponsor it.",
+    "country": "SG", "city": "Singapore", "type": "job", "experience_level": "mid", "min_years": 2, "max_years": 3,
+    "required_skills": ["excel", "reporting", "process_improvement"], "preferred_skills": ["project_coordination"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["business", "finance", "economics"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Singapore work pass; no sponsorship", "severity": "critical", "params": {"country": "SG", "sponsorship": false}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "programme-support-geneva", "title": "Programme Support Officer, UN-affiliated Body", "organisation": "International Community Programme (Fictional)",
+    "description": "Fictional programme support role; no affiliation with an actual UN body is claimed. Maintain programme records, research and reporting. French is preferred, not a hard constraint.",
+    "country": "CH", "city": "Geneva", "type": "job", "experience_level": "mid", "min_years": 2, "max_years": null,
+    "required_skills": ["programme_support", "reporting", "budget_tracking"], "preferred_skills": ["research"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["business", "social_science"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}, {"language": "fr", "min_level": "conversational", "required": false}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Swiss work eligibility required", "severity": "critical", "params": {"country": "CH", "sponsorship": null}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "project-management-trainee-toronto", "title": "Project Management Trainee, Consultancy", "organisation": "Northstar Delivery Partners",
+    "description": "Fictional early-career consultancy role supporting projects, presentations and delivery planning. Agile exposure is preferred; formal project management experience is not essential.",
+    "country": "CA", "city": "Toronto", "type": "job", "experience_level": "entry", "min_years": 0, "max_years": 2,
+    "required_skills": ["project_coordination", "presentation", "project_planning", "risk_tracking"], "preferred_skills": ["agile"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["engineering", "computer_science"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Canadian work eligibility required", "severity": "critical", "params": {"country": "CA", "sponsorship": null}}],
+    "work_mode": "hybrid"
+  },
+  {
+    "slug": "research-assistant-global-remote", "title": "Research Assistant, Policy Think Tank", "organisation": "Open Horizons Policy Lab",
+    "description": "Fictional global remote research role synthesising policy evidence and drafting reports. No hiring country is specified; country-specific work authorization is not asserted by the platform.",
+    "country": null, "city": null, "type": "job", "experience_level": "entry", "min_years": 1, "max_years": 3,
+    "required_skills": ["research", "reporting"], "preferred_skills": ["excel"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["social_science", "business", "humanities"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [], "work_mode": "remote"
+  },
+  {
+    "slug": "bilingual-customer-support-dhaka", "title": "Customer Support Specialist (Bengali + English)", "organisation": "Delta Customer Network",
+    "description": "Fictional bilingual support role resolving enquiries in Bengali and English. Maintain clear records and communicate with customers; both languages are required.",
+    "country": "BD", "city": "Dhaka", "type": "job", "experience_level": "entry", "min_years": 1, "max_years": 3,
+    "required_skills": ["customer_support", "ticket_management", "stakeholder_communication"], "preferred_skills": ["reporting"],
+    "education_requirements": {"required": {"min_level": "diploma", "related_fields": []}},
+    "languages": [{"language": "bn", "min_level": "native", "required": true}, {"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Bangladesh work eligibility required", "severity": "critical", "params": {"country": "BD", "sponsorship": null}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "senior-operations-manager-stuttgart", "title": "Senior Operations Manager, Manufacturing", "organisation": "Rhine Manufacturing Systems",
+    "description": "Fictional senior operations role leading manufacturing teams, operational strategy and process improvement. Eight or more years of experience are required; a master's is preferred only.",
+    "country": "DE", "city": "Stuttgart", "type": "job", "experience_level": "senior", "min_years": 8, "max_years": null,
+    "required_skills": ["team_leadership", "operations_strategy", "manufacturing", "process_improvement"], "preferred_skills": ["reporting"],
+    "education_requirements": {"preferred": {"min_level": "master", "related_fields": []}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "German work eligibility required", "severity": "critical", "params": {"country": "DE", "sponsorship": null}}],
+    "work_mode": "onsite"
+  },
+  {
+    "slug": "healthcare-data-scientist-montreal", "title": "Data Scientist, Healthcare AI", "organisation": "Maple Health Intelligence",
+    "description": "Fictional data science position developing healthcare analysis with Python and machine learning. Requires a relevant master's and substantial data science experience.",
+    "country": "CA", "city": "Montréal", "type": "job", "experience_level": "mid", "min_years": 5, "max_years": 7,
+    "required_skills": ["python", "machine_learning", "statistics", "data_engineering"], "preferred_skills": ["sql"],
+    "education_requirements": {"required": {"min_level": "master", "related_fields": ["data_science", "computer_science", "engineering"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "Canadian work eligibility required", "severity": "critical", "params": {"country": "CA", "sponsorship": true}}],
+    "work_mode": "hybrid"
+  },
+  {
+    "slug": "financial-analyst-new-york", "title": "Financial Analyst, Investment Bank", "organisation": "Hudson Capital Research (Fictional)",
+    "description": "Fictional financial analysis role building investment models and valuations. A finance-related degree and advanced experience are required; CFA-track experience is preferred. US sponsorship is unavailable.",
+    "country": "US", "city": "New York", "type": "job", "experience_level": "mid", "min_years": 5, "max_years": 7,
+    "required_skills": ["financial_modelling", "valuation", "investment_analysis", "excel"], "preferred_skills": ["cfa_track"],
+    "education_requirements": {"required": {"min_level": "bachelor", "related_fields": ["finance", "economics"]}},
+    "languages": [{"language": "en", "min_level": "professional", "required": true}],
+    "eligibility_requirements": [{"code": "work_authorisation", "label": "US work eligibility; no sponsorship", "severity": "critical", "params": {"country": "US", "sponsorship": false}}],
+    "work_mode": "onsite"
+  }
+]
