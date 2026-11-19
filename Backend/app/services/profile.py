@@ -9,10 +9,23 @@ from app.schemas.profile import ProfileRead, ProfileWrite
 SAMPLE_PROFILE = {
     "full_name": "Amina Rahman",
     "birthday": "1998-04-12",
-    "education": {"level": "bachelor", "field_of_study": "Business Administration", "is_enrolled": False},
+    "education": {
+        "level": "bachelor",
+        "field_of_study": "Business Administration",
+        "is_enrolled": False,
+    },
     "experience_years": 2,
-    "skills": ["excel", "research", "stakeholder_communication", "reporting", "project_coordination"],
-    "languages": [{"language": "bn", "level": "native"}, {"language": "en", "level": "professional"}],
+    "skills": [
+        "excel",
+        "research",
+        "stakeholder_communication",
+        "reporting",
+        "project_coordination",
+    ],
+    "languages": [
+        {"language": "bn", "level": "native"},
+        {"language": "en", "level": "professional"},
+    ],
     "preferred_locations": ["DE", "CA", "SG"],
     "career_interests": ["programme_support", "business_operations", "project_coordination"],
     "work_authorisation": {"status": "unknown", "countries": []},
@@ -26,7 +39,9 @@ async def read_profile(session: AsyncSession, user_id: str) -> ProfileRead:
     return ProfileRead.model_validate(profile)
 
 
-async def save_profile(session: AsyncSession, user_id: str, payload: ProfileWrite) -> tuple[ProfileRead, bool]:
+async def save_profile(
+    session: AsyncSession, user_id: str, payload: ProfileWrite
+) -> tuple[ProfileRead, bool]:
     values = payload.model_dump(mode="json")
     values["birthday"] = payload.birthday
     values["education"] = payload.education.model_dump(mode="json", exclude_unset=True)

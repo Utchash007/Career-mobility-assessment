@@ -17,14 +17,21 @@ async def get_profile(user: UserDependency, session: SessionDependency) -> Profi
 
 
 @router.put("", response_model=ProfileRead, responses={201: {"model": ProfileRead}})
-async def put_profile(payload: ProfileWrite, response: Response, user: UserDependency, session: SessionDependency) -> ProfileRead:
+async def put_profile(
+    payload: ProfileWrite, response: Response, user: UserDependency, session: SessionDependency
+) -> ProfileRead:
     result, created = await service.save_profile(session, user.user_id, payload)
     response.status_code = 201 if created else 200
     return result
 
 
 @router.post("/sample", response_model=ProfileRead, responses={201: {"model": ProfileRead}})
-async def sample_profile(payload: SampleProfileRequest, response: Response, user: UserDependency, session: SessionDependency) -> ProfileRead:
+async def sample_profile(
+    payload: SampleProfileRequest,
+    response: Response,
+    user: UserDependency,
+    session: SessionDependency,
+) -> ProfileRead:
     result, created = await service.save_sample(session, user.user_id)
     response.status_code = 201 if created else 200
     return result

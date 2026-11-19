@@ -20,8 +20,14 @@ def score_experience(profile: ProfileWrite, opportunity: OpportunitySummary) -> 
     elif maximum is not None and years > maximum:
         distance = years - maximum
         score = 0.6 / distance
-        reason = f"{years} years is {distance} year(s) above the stated maximum of {maximum}; this is a range-fit gap, not an eligibility rejection."
+        reason = (
+            f"{years} years is {distance} year(s) above the stated maximum of {maximum}; "
+            "this is a range-fit gap, not an eligibility rejection."
+        )
     else:
         score = 1.0
-        reason = f"{years} years meets the stated range: minimum {minimum}, maximum {maximum if maximum is not None else 'unbounded'}."
+        reason = (
+            f"{years} years meets the stated range: minimum {minimum}, "
+            f"maximum {maximum if maximum is not None else 'unbounded'}."
+        )
     return criterion("experience", score, reason, evidence)

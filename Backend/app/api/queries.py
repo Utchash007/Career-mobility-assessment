@@ -7,22 +7,47 @@ from app.core.errors import APIError, validation_fields
 from app.schemas.query import CollectionQuery, MatchQuery, OpportunityQuery, ShortlistQuery
 
 
+async def no_body_on_reads(request: Request) -> None:
+    if request.method in {"GET", "DELETE"} and await request.body():
+        raise APIError(
+            422,
+            "VALIDATION_ERROR",
+            "This endpoint accepts no request body.",
+            {"body": "Remove the request body."},
+        )
+
+
 def no_query_parameters(request: Request) -> None:
     if request.query_params:
         name = next(iter(request.query_params))
-        raise APIError(422, "VALIDATION_ERROR", "This endpoint accepts no query parameters.", {name: "Remove this parameter."})
+        raise APIError(
+            422,
+            "VALIDATION_ERROR",
+            "This endpoint accepts no query parameters.",
+            {name: "Remove this parameter."},
+        )
 
 
 def parse_query[T: CollectionQuery](request: Request, schema: type[T]) -> T:
     values: dict[str, str] = {}
     for name, value in request.query_params.multi_items():
         if name in values or name not in schema.model_fields or not value.strip():
-            raise APIError(422, "VALIDATION_ERROR", "Query parameters are invalid.", {name: "Use one non-empty supported parameter."})
+            raise APIError(
+                422,
+                "VALIDATION_ERROR",
+                "Query parameters are invalid.",
+                {name: "Use one non-empty supported parameter."},
+            )
         values[name] = value
     try:
         return schema.model_validate(values)
     except ValidationError as error:
-        raise APIError(422, "VALIDATION_ERROR", "Query parameters are invalid.", validation_fields(error.errors())) from None
+        raise APIError(
+            422,
+            "VALIDATION_ERROR",
+            "Query parameters are invalid.",
+            validation_fields(error.errors()),
+        ) from None
 
 
 def opportunity_query(request: Request) -> OpportunityQuery:

@@ -15,6 +15,11 @@ def isolated_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         "DIRECT_URL",
         "DB_POOL_SIZE",
         "DB_POOL_RECYCLE_SECONDS",
+        "JWKS_PUBLIC_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "CLERK_ISSUER",
+        "CLERK_AUTHORIZED_PARTIES",
+        "CLERK_CLOCK_SKEW_SECONDS",
     ):
         monkeypatch.delenv(name, raising=False)
     get_settings.cache_clear()

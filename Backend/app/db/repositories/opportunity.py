@@ -10,7 +10,12 @@ from app.schemas.query import CollectionQuery
 def opportunity_filters(query: CollectionQuery) -> list:
     filters = []
     if query.q is not None:
-        filters.append(or_(Opportunity.title.icontains(query.q, autoescape=True), Opportunity.organisation.icontains(query.q, autoescape=True)))
+        filters.append(
+            or_(
+                Opportunity.title.icontains(query.q, autoescape=True),
+                Opportunity.organisation.icontains(query.q, autoescape=True),
+            )
+        )
     for field in ("country", "type", "work_mode"):
         value = getattr(query, field)
         if value is not None:
@@ -19,10 +24,16 @@ def opportunity_filters(query: CollectionQuery) -> list:
 
 
 def saved_state(user_id: str):
-    return exists().where(Shortlist.user_id == user_id, Shortlist.opportunity_id == Opportunity.id).label("is_shortlisted")
+    return (
+        exists()
+        .where(Shortlist.user_id == user_id, Shortlist.opportunity_id == Opportunity.id)
+        .label("is_shortlisted")
+    )
 
 
-async def list_opportunities(session: AsyncSession, user_id: str, query: CollectionQuery) -> list[tuple[Opportunity, bool]]:
+async def list_opportunities(
+    session: AsyncSession, user_id: str, query: CollectionQuery
+) -> list[tuple[Opportunity, bool]]:
     statement = select(Opportunity, saved_state(user_id)).where(*opportunity_filters(query))
     sort = getattr(query, "sort", "id_asc")
     if sort == "title_asc":
@@ -34,6 +45,12 @@ async def list_opportunities(session: AsyncSession, user_id: str, query: Collect
     return [(row[0], row[1]) for row in (await session.execute(statement)).all()]
 
 
-async def find_opportunity(session: AsyncSession, user_id: str, opportunity_id: int) -> tuple[Opportunity, bool] | None:
-    row = (await session.execute(select(Opportunity, saved_state(user_id)).where(Opportunity.id == opportunity_id))).first()
+async def find_opportunity(
+    session: AsyncSession, user_id: str, opportunity_id: int
+) -> tuple[Opportunity, bool] | None:
+    row = (
+        await session.execute(
+            select(Opportunity, saved_state(user_id)).where(Opportunity.id == opportunity_id)
+        )
+    ).first()
     return (row[0], row[1]) if row is not None else None

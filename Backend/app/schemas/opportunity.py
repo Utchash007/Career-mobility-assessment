@@ -3,11 +3,25 @@
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import Field, StrictBool, StrictInt, StringConstraints, field_validator, model_validator
+from pydantic import (
+    Field,
+    StrictBool,
+    StrictInt,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
-from app.core.normalise import country_code, language_code, skill_key, unique_keys
+from app.core.normalise import country_code, field_group, language_code, skill_key, unique_keys
 from app.schemas.common import DTO, Text
-from app.schemas.enums import EducationLevel, ExperienceLevel, LanguageLevel, OpportunityType, Severity, WorkMode
+from app.schemas.enums import (
+    EducationLevel,
+    ExperienceLevel,
+    LanguageLevel,
+    OpportunityType,
+    Severity,
+    WorkMode,
+)
 
 
 class EducationRequirement(DTO):
@@ -17,7 +31,11 @@ class EducationRequirement(DTO):
     @field_validator("related_fields", mode="before")
     @classmethod
     def normalize_fields(cls, value: object) -> list[str]:
-        return unique_keys(value)
+        fields = unique_keys(value)
+        groups = [field_group(item) for item in fields]
+        if any(group is None for group in groups):
+            raise ValueError("Use a supported education field group.")
+        return list(dict.fromkeys(groups))
 
 
 class EducationRequirements(DTO):
@@ -55,7 +73,9 @@ class LicenceParams(DTO):
 
 
 class RequirementBase(DTO):
-    label: Annotated[str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=200)]
+    label: Annotated[
+        str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=200)
+    ]
     severity: Severity
 
 
@@ -99,7 +119,9 @@ class OpportunityFields(DTO):
     preferred_skills: list[str] = Field(default_factory=list, max_length=30)
     education_requirements: EducationRequirements = Field(default_factory=EducationRequirements)
     languages: list[OpportunityLanguage] = Field(default_factory=list, max_length=5)
-    eligibility_requirements: list[EligibilityRequirement] = Field(default_factory=list, max_length=10)
+    eligibility_requirements: list[EligibilityRequirement] = Field(
+        default_factory=list, max_length=10
+    )
     work_mode: WorkMode = WorkMode.ONSITE
 
     @field_validator("country", mode="before")

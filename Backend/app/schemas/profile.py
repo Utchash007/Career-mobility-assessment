@@ -1,10 +1,17 @@
 """Profile DTOs preserve unknown values instead of inventing answers."""
 
 import re
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Annotated
 
-from pydantic import Field, StrictBool, StrictInt, StringConstraints, field_validator, model_validator
+from pydantic import (
+    Field,
+    StrictBool,
+    StrictInt,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.core.normalise import country_code, language_code, skill_key, unique_keys
 from app.schemas.common import DTO
@@ -13,9 +20,12 @@ from app.schemas.enums import EducationLevel, LanguageLevel, WorkAuthorisationSt
 
 class Education(DTO):
     level: EducationLevel | None = None
-    field_of_study: Annotated[
-        str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=120)
-    ] | None = None
+    field_of_study: (
+        Annotated[
+            str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=120)
+        ]
+        | None
+    ) = None
     is_enrolled: StrictBool | None = None
 
 
@@ -70,7 +80,7 @@ class ProfileWrite(DTO):
     @field_validator("birthday")
     @classmethod
     def valid_birthday(cls, value: date | None) -> date | None:
-        if value is not None and not date(1900, 1, 1) <= value <= datetime.now(timezone.utc).date():
+        if value is not None and not date(1900, 1, 1) <= value <= datetime.now(UTC).date():
             raise ValueError("Birthday must be between 1900-01-01 and today.")
         return value
 

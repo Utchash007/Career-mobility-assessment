@@ -16,11 +16,15 @@ from app.services.opportunity import summary
 async def required_profile(session: AsyncSession, user_id: str) -> ProfileRead:
     profile = await find_profile(session, user_id)
     if profile is None:
-        raise APIError(409, "PROFILE_REQUIRED", "Create a profile before requesting recommendations.")
+        raise APIError(
+            409, "PROFILE_REQUIRED", "Create a profile before requesting recommendations."
+        )
     return ProfileRead.model_validate(profile)
 
 
-async def list_matches(session: AsyncSession, user_id: str, query: MatchQuery) -> Page[MatchListItem]:
+async def list_matches(
+    session: AsyncSession, user_id: str, query: MatchQuery
+) -> Page[MatchListItem]:
     async with session.begin():
         profile = await required_profile(session, user_id)
         rows = await repository.list_opportunities(session, user_id, query)
@@ -32,8 +36,10 @@ async def list_matches(session: AsyncSession, user_id: str, query: MatchQuery) -
                 items.append(MatchListItem(opportunity=opportunity_summary, match=match))
         items.sort(key=lambda item: ranking_key(item.match))
         start = (query.page - 1) * query.page_size
-        return Page[MatchListItem](items=items[start:start + query.page_size],
-                                   pagination=pagination_for(query.page, query.page_size, len(items)))
+        return Page[MatchListItem](
+            items=items[start : start + query.page_size],
+            pagination=pagination_for(query.page, query.page_size, len(items)),
+        )
 
 
 async def get_match(session: AsyncSession, user_id: str, opportunity_id: int) -> MatchResult:

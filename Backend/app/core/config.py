@@ -1,7 +1,8 @@
 """Environment configuration; external credentials are optional."""
 
-from functools import lru_cache
 import base64
+import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -90,7 +91,14 @@ class Settings(BaseSettings):
                 return None
             domain = domain[:-1]
             parsed = urlsplit("https://" + domain)
-            if parsed.hostname != domain or parsed.path or parsed.query or parsed.fragment:
+            if (
+                parsed.hostname != domain
+                or not re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", domain)
+                or "." not in domain
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+            ):
                 return None
             return "https://" + domain
         except (ValueError, UnicodeError):
@@ -98,20 +106,35 @@ class Settings(BaseSettings):
 
     @property
     def trusted_frontend_origins(self) -> list[str]:
-        return self.clerk_authorized_parties if self.clerk_authorized_parties is not None else self.cors_origins
+        return (
+            self.clerk_authorized_parties
+            if self.clerk_authorized_parties is not None
+            else self.cors_origins
+        )
 
     @field_validator("clerk_issuer")
     @classmethod
     def validate_issuer(cls, value: str | None) -> str | None:
         if value is not None:
             parsed = urlsplit(value)
-            if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
+            if (
+                parsed.scheme != "https"
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+            ):
                 raise ValueError("Clerk issuer must be an exact HTTPS origin.")
+            cls.validate_cors_origins([value])
         return value
 
     @model_validator(mode="after")
     def require_explicit_clerk_configuration(self) -> "Settings":
-        if self.auth_mode == "clerk" and (self.jwks_public_key is None or self.trusted_clerk_issuer is None):
+        if self.auth_mode == "clerk" and (
+            self.jwks_public_key is None or self.trusted_clerk_issuer is None
+        ):
             raise ValueError("Clerk mode requires a public signing key and a trusted issuer.")
         return self
 

@@ -7,15 +7,21 @@ Health is public; implemented business routes are protected by Clerk verificatio
 
 | Phase | Implementation | Verification |
 | --- | --- | --- |
-| 0 — scaffold and root environment loading | Completed previously | Historical results below |
-| 1 — DTOs, normalization, pagination and common errors | Implemented | Deferred to final phase |
-| 2 — database models, initial migration and session dependency | Implemented; revision 0001 applied to the authorized root database | Tests deferred to final phase |
-| 3 — Clerk verification and protected API boundary | Implemented | Deferred to final phase |
-| 4 — profile read, complete replacement and sample loading | Implemented | Deferred to final phase |
-| 5 — validated seed command and opportunity discovery | Implemented; seed writes not run | Deferred to final phase |
-| 6 — pure deterministic matcher and explanations | Implemented | Deferred to final phase |
-| 7 — ranked recommendation list and individual breakdown | Implemented | Deferred to final phase |
-| 8 — shortlist, note edits and atomic application-data deletion | Implemented | Deferred to final phase |
+| 0 — scaffold and root environment loading | Complete | Configuration/health tests |
+| 1 — DTOs, normalization, pagination and errors | Complete | Contract/unit tests |
+| 2 — Postgres models and migrations | Complete; migrated through 0002 | Read-only live schema checks |
+| 3 — Clerk session verification | Complete | Local signing-key tests; no live Clerk session |
+| 4 — profile APIs | Complete | Offline checks; live user workflows skipped |
+| 5 — seed and opportunity discovery | Complete; twelve roles seeded | Live seed round-trip and connection checks |
+| 6 — pure matching engine | Complete | Fictional scenarios and unknown-data tests |
+| 7 — recommendation APIs | Complete | Offline orchestration/contract tests |
+| 8 — shortlist, notes and application-data deletion | Complete | Offline checks; live user workflows skipped |
+| 9 — verification and handoff | Complete within authorized scope | User-dependent live tests explicitly skipped |
+
+Tests, lint and execution checks were intentionally deferred until Phase 9. Migrations
+and opportunity seeding were separately authorized against the root database. No Clerk
+account or database profile was created for tests. See **Final verification** below for
+the precise scope; mocks and in-memory fictional data are not live-user integration proof.
 
 ### Shortlist and privacy routes
 
@@ -117,19 +123,6 @@ All requests use a Clerk bearer session token; writes use `Content-Type: applica
 Omitted optional profile fields reset to their defaults. Experience null is not zero;
 enrolment null is not false; authorization countries not declared remain unknown.
 Profile edits preserve existing shortlist rows. Name and birthday do not affect matching.
-| 9 — all tests and integration verification | Pending | Not run yet |
-
-Per project instruction, no tests, lint, format checks, health probes or application
-execution checks are run during implementation phases. Phase commits are not claims
-of verified correctness; all verification is deferred to Phase 9.
-
-Phase 1 adds strict nested write contracts, explicit unknown values, common collection
-queries (`page=1`, `page_size=10`, maximum 100), duplicate/unknown query rejection and
-safe error envelopes. No database writes or business endpoints are added in this phase.
-
-Matching formula details (empty skill requirements, multi-language aggregation,
-experience distance, unknown education fields and education critical-flag policy)
-will be finalized and documented with the matcher in Phase 6 before final testing.
 
 ## Python and installation (Windows PowerShell)
 
@@ -203,16 +196,15 @@ claims are verified with PyJWT. No per-request Clerk call or secret-key lookup i
 the root key and restarting the backend; rotating remote JWKS is not implemented.
 Missing/invalid trusted configuration never becomes a fixed user or public API access.
 
-## Database and Alembic scaffold
+## Database and migrations
 
 `app/db/session.py` exposes lazy engine/session resources, with async SQLAlchemy,
 `asyncpg`, `pool_pre_ping`, bounded pooling and recycling. The lifespan disposes resources
-on shutdown; no engine is created at startup. Sessions do not auto-commit: future callers
-must explicitly own transactions. `app/db/base.py` provides declarative metadata for
-the three models in `app/db/models.py`. Integration tests
-will be added in Phase 9 and require a separate disposable Postgres target; SQLite is
-not supported for JSONB/ARRAY persistence. Do not use the root application's database
-as a destructive test fixture.
+on shutdown; no engine is created at startup. Sessions do not auto-commit: services
+explicitly own transactions. `app/db/base.py` provides metadata for the three models
+in `app/db/models.py`. SQLite is not supported for JSONB/ARRAY persistence. No destructive
+test fixture uses the root database. Current live tests run in read-only transactions
+and do not access user data; writable integration tests require a separate approved target.
 
 The existing shared-file naming convention is supported (fake placeholders only):
 
@@ -226,17 +218,21 @@ to asyncpg's `ssl` option and remove libpq's unsupported `channel_binding` optio
 in memory without editing `.env`. Channel-binding enforcement is not provided by this
 driver adaptation. Existing `postgresql+asyncpg://...?ssl=require` URLs also work.
 Percent-encode reserved characters in passwords. Never commit credentials or print URLs.
-Real Neon TLS connectivity, pooling and database operations have **not** been validated.
+The authorized database accepted migrations, seed upserts, direct reads and pooled
+application reads. These checks are not a production load or long-running pooler test.
 
 Alembic uses the resolved direct URL with `NullPool`, never `DATABASE_URL_POOLED`.
 `DIRECT_URL` wins when set; otherwise the paired convention supplies the direct
 `DATABASE_URL`. A legacy `DATABASE_URL` supplied alone is not inferred to be direct.
-Revision `0001` creates `profiles`, `opportunities` and `shortlist`. It has been authored
-and was applied to the root `.env` database after explicit authorization. The migration
-command succeeded; no tests or health probes were run. This command needs no database:
+Revision `0001` creates `profiles`, `opportunities` and `shortlist`; `0002` aligns
+opportunity/shortlist identities with `GENERATED ALWAYS` without replacing rows.
+Both were applied to the root `.env` database after authorization. These commands
+describe the explicit workflow; migration writes never happen automatically:
 
 ```powershell
 uv run --locked --managed-python alembic heads
+uv run --locked --managed-python alembic upgrade head
+uv run --locked --managed-python python -m app.db.seed --apply
 ```
 
 Review migration SQL and confirm the intended database before applying it. Migrations
@@ -264,9 +260,9 @@ uv run --no-project --managed-python --with pip-audit==2.10.1 python -m pip_audi
 ```
 
 An advisory scan does not establish that the app, Python runtime or infrastructure is
-secure. External service behavior and future authentication/business logic remain untested.
+secure. Live Clerk sessions and user-owned database workflows remain unverified.
 
-### Setup verification (2026-11-19, Windows)
+### Historical scaffold verification (before backend implementation)
 
 - `uv sync --locked --managed-python`: installed all 37 locked environment packages;
   subsequent `--check` reported no changes.
@@ -281,9 +277,10 @@ secure. External service behavior and future authentication/business logic remai
 - A real Uvicorn factory startup on `127.0.0.1:8000` returned HTTP 200 and `{"status":"ok"}`;
   the server completed lifespan shutdown and a subsequent check found no listener on 8000.
 
-No Neon or Clerk credentials were used or required. Their live behavior remains unverified.
+The historical scaffold run did not use Neon or Clerk credentials; the current database
+verification described below is separate.
 
-### Shared-root environment verification
+### Historical shared-root environment verification
 
 - Updated suite: **55 tests passed**, including root/project/process precedence,
   optional files, anchored paths, paired database URLs and Neon URL normalization.
@@ -291,4 +288,113 @@ No Neon or Clerk credentials were used or required. Their live behavior remains 
 - The actual root `.env` loaded successfully when invoked from the repository root;
   health returned 200 without constructing a database engine or contacting Clerk.
   Credentials were not printed and the file was not edited. Live service behavior
-  still remains unverified.
+   still remains unverified.
+
+## Final verification — Phase 9 (2026-11-19)
+
+- **202 passed, 1 skipped** with the explicitly enabled read-only database checks.
+- **197 passed, 6 skipped** from a fresh Git source snapshot installed with
+  `uv sync --locked --managed-python`, without any `.env` files or service credentials.
+- Ruff lint passed; all **66 Python files** passed formatting checks.
+- Locked installation succeeded; all **37 installed packages** passed compatibility checks.
+- OpenAPI documents all **13 operations across 10 paths**, Clerk bearer security,
+  collection filters/pagination and safe error envelopes.
+- Pure tests cover finalized fictional scenarios, unknown vs zero/false, preferred-only
+  requirements, authorization/sponsorship semantics, deterministic ranking and privacy.
+- Local-key JWT tests cover signatures, algorithm rejection, issuer, authorized party,
+  timestamps, pending/non-user sessions and authentication-before-validation ordering.
+- Offline service/SQL tests cover rank-before-page, label-filter totals, profile-required
+  ordering, owner-scoped parameterized queries, note omission and deletion retry counts.
+- After explicit authorization, migrations **0001 → 0002** and the opportunity seed command
+  succeeded against the root database. Live checks verified migration head, JSONB/ARRAY
+  round-trips, identity generation, uniqueness/cascade metadata, direct connection reads
+  and pooled application reads. Live test transactions were explicitly **read-only**.
+
+**Not performed:** real Clerk sign-in/session verification; database profile creation,
+two-user isolation, user-owned CRUD end-to-end, concurrent saves/deletion, rollback fault
+injection, migration downgrade/re-upgrade and production load testing. These need an
+approved disposable writable database and, for real auth, a supplied Clerk test session.
+They were skipped per instruction rather than creating any user/account/profile.
+No existing user data was selected, changed or deleted by the live checks. The authorized
+seed wrote opportunity rows only. No frontend implementation or tests were added here.
+
+To repeat only credential-free checks, run from `Backend/`:
+
+```powershell
+uv run --locked --managed-python pytest -q
+uv run --locked --managed-python ruff check .
+uv run --locked --managed-python ruff format --check .
+```
+
+Only after approving read access to the configured database:
+
+```powershell
+$env:BACKEND_READ_ONLY_DB_TESTS = "1"
+uv run --locked --managed-python pytest -q
+Remove-Item Env:BACKEND_READ_ONLY_DB_TESTS
+```
+
+### Computed fictional examples
+
+These are actual pure-engine outputs for the in-memory sample, not stored user matches:
+
+| Role | Score | Label | Important finding |
+| --- | ---: | --- | --- |
+| Programme Assistant, Berlin | 95.2 | strong | Work authorization requires verification |
+| Programme Support Officer, Geneva | 69.0 | partial | Skills/location gaps; French preference is not a penalty |
+| German-speaking Client Associate | 68.0 | not_recommended | Required German absent from declared languages |
+| Business Analyst Intern | 76.0 | not_recommended | Explicitly not enrolled; authorization also requires verification |
+| Senior Operations Manager | 56.0 | partial | Six-year experience shortfall despite other matching criteria |
+| Data Scientist | 35.0 | weak | Skills, experience and required education gaps |
+| Financial Analyst | 35.0 | weak | Skills, experience, field and location gaps; authorization unknown |
+
+The earlier plan's hoped-for weak senior-manager label is **not** a computed truth.
+Language, no required education, location and preferred reporting contribute 56 even
+with zero required-skills/experience fit. No role-specific score override is added.
+Use the criterion breakdown, not a label alone, when deciding whether to apply.
+
+### Manual API use and integration boundary
+
+After configuring the backend's trusted signing key/issuer/origins, obtain a real Clerk
+session token from the frontend SDK. Do not use a Clerk secret key as the bearer token.
+Keep tokens out of scripts, Git and logs. Example using an existing process variable:
+
+```powershell
+$headers = @{ Authorization = "Bearer $env:CLERK_SESSION_TOKEN" }
+Invoke-RestMethod "http://127.0.0.1:8000/api/v1/opportunities?page=1&page_size=10" -Headers $headers
+```
+
+For `POST /profile/sample`, send `{}` with JSON content type; it replaces the caller's
+profile after explicit confirmation. Do not call it merely to probe server readiness.
+`http://localhost:3000` and `http://127.0.0.1:3000` are different origins; configure CORS
+and authorized parties to the exact origins used by your frontend. No custom login API,
+opportunity-write API, stored matching job or frontend type generator is introduced.
+
+### Technical note and limitations
+
+- Flow: router → service → repository → async Postgres; services own transactions.
+  Authentication middleware runs before body/query validation; each protected route
+  also declares the verified-user dependency. Health/startup never warms the database.
+- Profiles use a single degree and a single country-list authorization status. Mixed
+  per-country statuses, verified visas/licences, salary and application deadlines are
+  out of scope. Name/birthday/interests never affect matching.
+- Unknown fields and aliases remain unknown rather than silently legal/eligible.
+  Work authorization is always self-declared/unverified, never a legal determination.
+- No RLS, admin APIs, rate limiter, infrastructure body limit, remote JWKS rotation,
+  queues or LLM calls. Key rotation requires key update and backend restart. Deployment
+  hardening and writable isolation/concurrency testing are follow-up work.
+- Whole filtered collections are read in memory for this twelve-role prototype. Larger
+  catalogs need bounded database pagination for browsing and an explicit ranking strategy.
+- The frontend is still a scaffold; authentication UI and the full product journey have
+  not been built or tested. A passing mock suite is not end-to-end service proof.
+
+### AI/tool and service disclosure
+
+Implementation was AI-assisted through OpenCode: planning, FastAPI/Pydantic/SQLAlchemy
+code, matching rules, tests and documentation. The `fastapi-templates` skill informed
+async dependencies and service/repository layering; the Clerk skill/documentation
+informed session verification. PostgreSQL replaced the template's SQLite examples;
+Clerk replaced password-auth examples. No subagents or paid AI service are required
+at runtime. Human review and the unperformed live-user checks remain necessary before
+submission/deployment. Clerk is the intended identity provider; Neon/Postgres stores
+application data. Tests used local signing keys, not real Clerk accounts.

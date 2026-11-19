@@ -32,7 +32,9 @@ def error_response(error: APIError, headers: dict[str, str] | None = None) -> JS
 def validation_fields(errors: list[dict[str, Any]]) -> dict[str, str]:
     fields: dict[str, str] = {}
     for item in errors:
-        location = [str(part) for part in item.get("loc", ()) if part not in {"body", "query", "path"}]
+        location = [
+            str(part) for part in item.get("loc", ()) if part not in {"body", "query", "path"}
+        ]
         path = ".".join(location) or "body"
         # Never interpolate the raw input or exception text from validator contexts.
         if item.get("type") == "json_invalid":
@@ -52,19 +54,38 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def request_validation(_request: Request, error: RequestValidationError) -> JSONResponse:
-        return error_response(APIError(422, "VALIDATION_ERROR", "Request is invalid.", validation_fields(error.errors())))
+        return error_response(
+            APIError(
+                422, "VALIDATION_ERROR", "Request is invalid.", validation_fields(error.errors())
+            )
+        )
 
     @app.exception_handler(HTTPException)
     async def http_error(_request: Request, error: HTTPException) -> JSONResponse:
-        codes = {401: "UNAUTHENTICATED", 403: "FORBIDDEN", 404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}
+        codes = {
+            401: "UNAUTHENTICATED",
+            403: "FORBIDDEN",
+            404: "NOT_FOUND",
+            405: "METHOD_NOT_ALLOWED",
+        }
         return error_response(
-            APIError(error.status_code, codes.get(error.status_code, "HTTP_ERROR"), "Request could not be completed."),
+            APIError(
+                error.status_code,
+                codes.get(error.status_code, "HTTP_ERROR"),
+                "Request could not be completed.",
+            ),
             error.headers,
         )
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(_request: Request, _error: SQLAlchemyError) -> JSONResponse:
-        return error_response(APIError(503, "SERVICE_UNAVAILABLE", "The service is temporarily unavailable. Please try again."))
+        return error_response(
+            APIError(
+                503,
+                "SERVICE_UNAVAILABLE",
+                "The service is temporarily unavailable. Please try again.",
+            )
+        )
 
     @app.exception_handler(Exception)
     async def unexpected_error(_request: Request, _error: Exception) -> JSONResponse:

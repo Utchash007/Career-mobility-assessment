@@ -17,11 +17,18 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 
 
 @router.get("", response_model=Page[MatchListItem])
-async def get_matches(user: UserDependency, session: SessionDependency,
-                      query: Annotated[MatchQuery, Depends(match_query)]) -> Page[MatchListItem]:
+async def get_matches(
+    user: UserDependency,
+    session: SessionDependency,
+    query: Annotated[MatchQuery, Depends(match_query)],
+) -> Page[MatchListItem]:
     return await service.list_matches(session, user.user_id, query)
 
 
-@router.get("/{opportunity_id}", response_model=MatchResult, dependencies=[Depends(no_query_parameters)])
-async def get_match(opportunity_id: OpportunityID, user: UserDependency, session: SessionDependency) -> MatchResult:
+@router.get(
+    "/{opportunity_id}", response_model=MatchResult, dependencies=[Depends(no_query_parameters)]
+)
+async def get_match(
+    opportunity_id: OpportunityID, user: UserDependency, session: SessionDependency
+) -> MatchResult:
     return await service.get_match(session, user.user_id, opportunity_id)
