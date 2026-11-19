@@ -1,6 +1,7 @@
 """Environment configuration; external credentials are optional."""
 
 from functools import lru_cache
+import base64
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -52,14 +53,67 @@ class Settings(BaseSettings):
     )
 
     env: Literal["development", "test", "production"] = "development"
-    # Fail closed: no dev bypass or Clerk mode is implemented in this scaffold.
-    auth_mode: Literal["disabled"] = "disabled"
+    # Auto uses supplied trusted configuration, never a fixed-user bypass.
+    auth_mode: Literal["auto", "disabled", "clerk"] = "auto"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     database_url: SecretStr | None = None
     database_url_pooled: SecretStr | None = None
     direct_url: SecretStr | None = None
     db_pool_size: int = Field(default=5, ge=1, le=20)
     db_pool_recycle_seconds: int = Field(default=300, ge=1, le=300)
+    jwks_public_key: SecretStr | None = None
+    next_public_clerk_publishable_key: SecretStr | None = None
+    clerk_issuer: str | None = None
+    clerk_authorized_parties: list[str] | None = None
+    clerk_clock_skew_seconds: int = Field(default=5, ge=0, le=30)
+
+    @field_validator("jwks_public_key", "next_public_clerk_publishable_key", mode="before")
+    @classmethod
+    def empty_key_is_unset(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @property
+    def trusted_clerk_issuer(self) -> str | None:
+        if self.clerk_issuer:
+            return self.clerk_issuer
+        if self.next_public_clerk_publishable_key is None:
+            return None
+        key = self.next_public_clerk_publishable_key.get_secret_value()
+        if not key.startswith(("pk_test_", "pk_live_")):
+            return None
+        try:
+            encoded = key.split("_", 2)[2]
+            domain = base64.b64decode(encoded + "=" * (-len(encoded) % 4), validate=True).decode()
+            if not domain.endswith("$"):
+                return None
+            domain = domain[:-1]
+            parsed = urlsplit("https://" + domain)
+            if parsed.hostname != domain or parsed.path or parsed.query or parsed.fragment:
+                return None
+            return "https://" + domain
+        except (ValueError, UnicodeError):
+            return None
+
+    @property
+    def trusted_frontend_origins(self) -> list[str]:
+        return self.clerk_authorized_parties if self.clerk_authorized_parties is not None else self.cors_origins
+
+    @field_validator("clerk_issuer")
+    @classmethod
+    def validate_issuer(cls, value: str | None) -> str | None:
+        if value is not None:
+            parsed = urlsplit(value)
+            if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
+                raise ValueError("Clerk issuer must be an exact HTTPS origin.")
+        return value
+
+    @model_validator(mode="after")
+    def require_explicit_clerk_configuration(self) -> "Settings":
+        if self.auth_mode == "clerk" and (self.jwks_public_key is None or self.trusted_clerk_issuer is None):
+            raise ValueError("Clerk mode requires a public signing key and a trusted issuer.")
+        return self
 
     @field_validator("database_url", "database_url_pooled", "direct_url", mode="before")
     @classmethod
@@ -87,9 +141,11 @@ class Settings(BaseSettings):
             self.database_url = self.database_url_pooled
         return self
 
-    @field_validator("cors_origins")
+    @field_validator("cors_origins", "clerk_authorized_parties")
     @classmethod
-    def validate_cors_origins(cls, origins: list[str]) -> list[str]:
+    def validate_cors_origins(cls, origins: list[str] | None) -> list[str] | None:
+        if origins is None:
+            return None
         for origin in origins:
             parsed = urlsplit(origin)
             if (

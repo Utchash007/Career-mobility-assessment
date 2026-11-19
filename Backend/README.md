@@ -9,8 +9,9 @@ Only health is exposed at Phase 1; business routes and authentication come later
 | --- | --- | --- |
 | 0 — scaffold and root environment loading | Completed previously | Historical results below |
 | 1 — DTOs, normalization, pagination and common errors | Implemented | Deferred to final phase |
-| 2 — database models, initial migration and session dependency | Implemented; not applied to a database | Deferred to final phase |
-| 3–8 — authentication and business features | Pending | Deferred to final phase |
+| 2 — database models, initial migration and session dependency | Implemented; revision 0001 applied to the authorized root database | Tests deferred to final phase |
+| 3 — Clerk verification and protected API boundary | Implemented | Deferred to final phase |
+| 4–8 — business features | Pending | Deferred to final phase |
 | 9 — all tests and integration verification | Pending | Not run yet |
 
 Per project instruction, no tests, lint, format checks, health probes or application
@@ -72,7 +73,7 @@ allowed. No `.env*` file, including example templates, is published to GitHub.
 | Variable | Default / behavior |
 | --- | --- |
 | `ENV` | `development`; also accepts `test`, `production` |
-| `AUTH_MODE` | Only `disabled` is accepted; `dev` and `clerk` fail validation, including production |
+| `AUTH_MODE` | `auto` by default; uses supplied trusted Clerk configuration. `disabled` denies business access; explicit `clerk` requires trusted configuration. No `dev` bypass. |
 | `CORS_ORIGINS` | JSON array `["http://localhost:3000"]`; exact HTTP(S) origins only |
 | `DATABASE_URL` | Empty; **direct** Neon URL when paired with `DATABASE_URL_POOLED`; legacy application URL when supplied alone |
 | `DATABASE_URL_POOLED` | Empty; if supplied, used for application connections instead of `DATABASE_URL` |
@@ -80,16 +81,22 @@ allowed. No `.env*` file, including example templates, is published to GitHub.
 | `DB_POOL_SIZE` | `5` (1–20); used only when the database scaffold is explicitly used |
 | `DB_POOL_RECYCLE_SECONDS` | `300` (1–300); lower to match your Neon project's idle timeout |
 
-CORS currently permits only `GET`, `Authorization` and `Content-Type`; credentialed cookies
-are not enabled. Extend the method allowlist when business routes are actually added.
-CORS is a browser policy, **not authentication**. `AUTH_MODE=disabled` does not protect
-anything: this scaffold exposes only public health/docs and must not gain business
-routes without actual authentication and authorization.
+CORS allows GET/PUT/POST/PATCH/DELETE, Authorization and Content-Type for exact configured
+origins; credentialed cookies are not used. Every `/api/v1` request is authenticated
+before parsing its body or query. `/health` remains public. CORS is not authentication.
 
-PyJWT's crypto extra is installed for **future** Clerk verification only. Reserved Clerk
-variables `CLERK_SECRET_KEY`, `JWKS_PUBLIC_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-may remain in the shared root file; they are ignored by backend settings and not used by auth code.
-There is no fixed development identity, token verification, password handling or Clerk call.
+Set `JWKS_PUBLIC_KEY` to Clerk's **PEM public signing key**, not a URL or JWKS JSON.
+Actual newlines or escaped `\n` are supported. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` supplies
+the trusted Clerk instance hostname; optional `CLERK_ISSUER` overrides it with an exact
+HTTPS origin. `CLERK_AUTHORIZED_PARTIES` optionally supplies an exact-origin JSON list,
+otherwise `CORS_ORIGINS` is used. Missing `azp` is deliberately rejected. Clock skew is
+5 seconds by default (`CLERK_CLOCK_SKEW_SECONDS`, 0–30).
+
+RS256 signature, issuer, exp/nbf/iat, authorized party, user identity and active session
+claims are verified with PyJWT. No per-request Clerk call or secret-key lookup is needed.
+`CLERK_SECRET_KEY` is not used by this backend. Signing-key rotation requires updating
+the root key and restarting the backend; rotating remote JWKS is not implemented.
+Missing/invalid trusted configuration never becomes a fixed user or public API access.
 
 ## Database and Alembic scaffold
 
@@ -120,7 +127,8 @@ Alembic uses the resolved direct URL with `NullPool`, never `DATABASE_URL_POOLED
 `DIRECT_URL` wins when set; otherwise the paired convention supplies the direct
 `DATABASE_URL`. A legacy `DATABASE_URL` supplied alone is not inferred to be direct.
 Revision `0001` creates `profiles`, `opportunities` and `shortlist`. It has been authored
-but **not applied or tested**. This command needs no database:
+and was applied to the root `.env` database after explicit authorization. The migration
+command succeeded; no tests or health probes were run. This command needs no database:
 
 ```powershell
 uv run --locked --managed-python alembic heads
