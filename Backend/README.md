@@ -13,7 +13,47 @@ Health is public; implemented business routes are protected by Clerk verificatio
 | 3 — Clerk verification and protected API boundary | Implemented | Deferred to final phase |
 | 4 — profile read, complete replacement and sample loading | Implemented | Deferred to final phase |
 | 5 — validated seed command and opportunity discovery | Implemented; seed writes not run | Deferred to final phase |
-| 6–8 — matching and shortlist | Pending | Deferred to final phase |
+| 6 — pure deterministic matcher and explanations | Implemented | Deferred to final phase |
+| 7–8 — recommendation APIs and shortlist | Pending | Deferred to final phase |
+
+### Matching rules — version 1.0.0
+
+Five base weights: skills 30%, language 20%, experience 20%, education 15%, location 15%.
+Unknown scores are null and excluded from the weighted denominator; no role requirement
+is a met score, not missing user evidence. Only the final overall score is rounded
+to one decimal. Labels use that returned score: strong >=75, partial >=50, otherwise
+weak. Any critical finding takes precedence; all-unknown without critical findings
+is insufficient_data. Sort: critical last, numeric scores descending (null last),
+evaluated count descending, opportunity ID ascending.
+
+Resolved formula details, consistent with required/preferred and missing-data semantics:
+
+- Skills: required overlap `r`, plus bounded bonus `0.2 * (1-r) * preferred_overlap`.
+  Missing preferences never lower required overlap; no required skills (including
+  preferred-only roles) scores 1. An undeclared skill list with required skills is unknown.
+- Language: mean of required-language level ratios, each capped at 1 (levels 1–4).
+  A missing required language in a declared list scores 0 and flags critical; an empty
+  declaration is unknown/verify. Below-required proficiency is critical. Preferences
+  are evidence only, never a penalty; no required languages scores 1.
+- Experience: in range 1; one year short 0.6; two years short 0.3; three or more short 0.
+  Above maximum scores `0.6 / years_above`. Unbounded maximum imposes no upper penalty;
+  minimum 0 with no maximum states no restriction and scores 1 even for unknown experience.
+- Education: required level shortfall 0; meets level + related/any field 1; known unrelated
+  field 0.5. If level meets but field cannot be mapped, score null; a proven level gap
+  still scores 0. Preferred-only education scores 1. Education fit gaps are **score-only**,
+  not automatic critical findings. This resolves the schema's optional “can emit” wording
+  with the planned weak Data Scientist case; enrolment remains a separate hard constraint.
+- Location: preferred hiring country 1; otherwise remote 0.7; otherwise 0. No preferences
+  is unknown, including global remote. Location never establishes work authorization.
+- Criterion statuses: null unknown, 1 met, 0 unmet, strictly between 0 and 1 partial.
+
+Eligibility severity mapping: critical unmet -> critical, critical unknown -> verify;
+verify unmet -> info, verify unknown -> verify; info -> info. Self-declared authorization
+is informational and always labelled unverified. Unknown/unlisted countries and student
+visas require verification. Sponsorship becomes a hard gap only when explicitly unavailable.
+Licence/other checks have no profile evidence and remain unknown, never invented satisfied.
+The matcher imports no database/web code, calls no LLM, stores no results, and never uses
+name, birthday or career interests. Reasons and evidence come from the same computations.
 
 ### Opportunities and explicit seed command
 
