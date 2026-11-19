@@ -27,7 +27,7 @@ export const NAVIGATION_ITEMS = [
   {
     href: APP_ROUTES.recommendations,
     label: "Matches",
-    availability: "planned",
+    availability: "available",
   },
   { href: APP_ROUTES.shortlist, label: "Shortlist", availability: "planned" },
   { href: APP_ROUTES.account, label: "Account", availability: "planned" },

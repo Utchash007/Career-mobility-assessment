@@ -1,6 +1,6 @@
 # Frontend — component-first interface
 
-**Phases 1–5 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–6 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
 `/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
@@ -124,6 +124,17 @@ back/forward navigation reconstruct the applied search. Invalid URL parameters
 receive reset guidance, distinct from zero results or an out-of-range page.
 Totals are backend metadata; there is no local filtering or catalog-wide fetch.
 Details and shortlist actions follow in later phases.
+
+### Ranked matching
+
+`MatchLabelBadge`, `MatchScore`, `EligibilityFlags`, `CriterionRow`,
+`MatchBreakdown` and `MatchSummary` consume backend results without scoring.
+`RecommendationCard` keeps eligibility findings before the score and derives
+strengths/gaps only from backend statuses/reasons. Null is insufficient data, not 0;
+criterion scores remain 0–1 and overall fit 0–100. Evidence is narrowed per criterion;
+unknown arbitrary objects are omitted, never stringified into the interface.
+`/recommendations` preserves server ranking/totals, offers label/common URL filters
+and handles missing profile separately from zero results. No per-card requests.
 
 ## Color scheme
 
