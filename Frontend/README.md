@@ -1,13 +1,16 @@
-# Frontend — component-first foundation
+# Frontend — component-first interface
 
-**Phase 1 is implemented, not yet execution-verified.** The Next.js App Router
-scaffold now includes manual API contracts, Zod validation, profile draft/payload
-conversion, endpoint-specific query helpers, display labels and palette tokens.
-There are still no application pages, authored UI components, live forms,
-authenticated API requests or deployment integrations.
-`/` intentionally returns Next.js's framework 404. The only authored endpoint is
-`GET /api/health`, returning `{"status":"ok"}`; it checks neither the backend nor
-external services.
+**Phases 1 and 2 are implemented, not yet execution-verified.** The Next.js App
+Router frontend includes manual API contracts, Zod validation, profile conversion,
+strict query helpers and a palette-themed, component-first application shell.
+`/` renders a public interface preview, not a working assessment or dashboard.
+There are no live forms, authenticated API requests or deployment integrations.
+`GET /api/health` still returns `{"status":"ok"}`; it checks neither the backend
+nor external services.
+
+Phase 1 was pushed to `origin/Frontend` as `33317a1`. Phase 2 is recorded in a
+separate implementation commit. Further phases continue with separate commits;
+implementation commits are not evidence of passing verification.
 
 ## Component architecture
 
@@ -58,6 +61,43 @@ IDs and numeric metadata must fit JavaScript's safe-integer range. The backend
 alone computes scores, eligibility, ordering and totals; these modules do not score.
 Evidence remains `Record<string, unknown>` until presentation narrows its shape.
 
+### Shared UI and shell
+
+Every name below uses `components/<Name>/<Name>.tsx`:
+
+| Components | Responsibility |
+| --- | --- |
+| `LoadingState`, `EmptyState` | Labeled loading and explanatory empty results with composed actions |
+| `ErrorState` | Fixed safe error copy and an optional controlled retry action |
+| `ProfileRequiredState` | Missing-profile state, distinct from zero results |
+| `ConfigurationNotice` | Kind-based setup guidance; no environment-value props |
+| `ConfirmationDialog` | Controlled Flowbite modal with cancel-first focus and pending guards |
+| `NavigationMenu`, `AppNavigation` | Active links, responsive menu and optional account-content slot |
+| `AppShell`, `AppProviders` | Landmarks/skip link, page children and initialized Flowbite theme |
+| `NotFoundScreen` | Safe unknown-route/resource presentation with a fixed internal home link |
+| `WorkflowPreviewCard`, `HomeScreen` | Static public overview; no account, fixtures or computed results |
+
+The root layout only composes imported providers/shell inside required HTML/body
+tags. Root page, loading, error and not-found entrypoints delegate to the matching
+components. Server-rendered shell/content stays outside the client provider's
+import graph and is passed through `children`. Only menu, retry and dialog
+interactions (plus the provider) are explicit client boundaries.
+The route error adapter uses Next 16.4's stable `retry()` callback for refetching
+recovery rather than the non-refetching `reset()` callback. These boundaries were
+reviewed against the installed Next.js `dist/docs/` guides, not older tutorials.
+
+`lib/display/navigation.ts` defines fixed internal destinations. Only Home is
+enabled; planned Profile, Opportunities, Matches (`/recommendations`), Shortlist
+and Account entries are non-link text marked **Soon**. Availability is not an
+authorization mechanism. Later pages must check Clerk authorization independently.
+The menu reads Flowbite's own state for `aria-expanded`/`aria-controls`; it does
+not maintain a second copy. Desktop navigation begins at the `lg` breakpoint.
+
+Dialog open/pending state and mutation behavior belong to the caller. Pending
+disables both actions and dismissal; the shared dialog never performs requests.
+`ErrorState` accepts an error reason, not an exception or server message. Supply
+retry only for an explicitly safe action, not automatic mutation replay.
+
 ## Color scheme
 
 Requested [Color Hunt palette](https://colorhunt.co/palette/efece38fabd44a70a9000000):
@@ -73,9 +113,11 @@ Tailwind tokens live in `app/globals.css`; matching color constants live in
 `lib/display/palette.ts`. Use the darker derived blue `#38547F` for small-text
 actions/links and `#2D4366` for hover rather than assuming the base blue works for
 all normal-text pairs. Semantic critical/verification/success colors stay distinct
-and must accompany text, never color alone. Keep light mode. Flowbite/Clerk
-component theming will be wired in the UI/authentication phases; tokens alone do
-not constitute a finished interface or verified accessibility.
+and must accompany text, never color alone. Keep light mode.
+`lib/display/flowbite-theme.ts` now applies static palette-token classes to
+Flowbite buttons, alerts, cards, spinner, modal and navigation through `AppProviders`.
+Overridden leaves replace the corresponding defaults; other Flowbite defaults remain.
+Clerk appearance is deferred to Phase 3. Styling is not verified accessibility.
 
 ## Toolchain and installation
 
@@ -85,7 +127,7 @@ version manager; this project does not install or change global Node.
 
 From `Frontend/`:
 
-These are setup/final-verification commands, not evidence of Phase 1 execution.
+These are setup/final-verification commands, not evidence of Phase 1–2 execution.
 Tests, lint, typecheck, builds and runtime probes are currently deferred to Phase 10.
 
 ```sh
@@ -97,7 +139,8 @@ npm run build
 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open `http://127.0.0.1:3000/api/health`. Stop with Ctrl+C. To run the production
+Open `http://127.0.0.1:3000/` for the preview or `/api/health` for frontend liveness.
+Stop with Ctrl+C. To run the production
 build instead:
 
 ```sh
@@ -124,11 +167,11 @@ do not enable all install scripts blindly.
   manually from the installed package; no generator was run.
 - The Flowbite plugin regenerates `.flowbite-react/class-list.json` and
   `.flowbite-react/init.tsx` during build/dev. They are ignored build artifacts;
-  no Flowbite provider or visible component is mounted in this scaffold.
-  Its theme-initialization warning is expected because `dark: false` differs from
-  the upstream default. Mount the generated initialization when UI is implemented;
-  there are no Flowbite runtime components to synchronize yet. The schema URL is
-  the upstream URL enforced by the pinned plugin, not a dependency version choice.
+  `AppProviders` imports the generated `ThemeInit` and renders it before child UI
+  to synchronize the light-mode/Tailwind-v4 configuration. Do not edit or move
+  generated files, or publish them as app-owned components. Check fresh-checkout
+  generation and the absence of initialization warnings during final verification.
+  The schema URL is upstream-enforced, not a dependency version choice.
 - `biome.json`: linting/formatting with generated output excluded. `npm run format`
   formats authored files. `npm run typecheck` generates Next's route types before
   running strict TypeScript checks, so it also works before a first build.
@@ -136,12 +179,12 @@ do not enable all install scripts blindly.
   allowed for pure modules so Node 24's native type stripping can run the `.mjs`
   contract tests without a new test runner or transpiler. No runtime TypeScript
   enum/decorator features are used.
-- `app/layout.tsx`: required HTML/body wrapper only; no visible application UI.
+- `app/layout.tsx`: metadata and HTML/body containing imported providers/shell.
 
 ### Environment and intentionally unwired authentication
 
 No `.env` file, runtime credentials, Clerk instance, database, or backend is needed
-for this scaffold. Keep shared credentials in the repository root `.env`. Next.js first
+for the public preview. Keep shared credentials in the repository root `.env`. Next.js first
 loads `Frontend/.env*` in its normal precedence order; `next.config.ts` then loads the
 root `.env` for missing values only, using Node's dotenv parser. Real environment
 variables and frontend-local values take precedence per key. Root lookup is anchored
@@ -181,7 +224,7 @@ public health endpoint does not imply any future business endpoint may be public
 Zod now validates pure data contracts. Clerk is still unwired.
 **`openapi-typescript` is deliberately excluded.** Browser/component testing tools
 remain a separate approval decision; no additional dependencies, ESLint or other
-UI kit were installed for Phase 1.
+UI kit were installed for Phases 1–2.
 
 ### Scoped security override
 
@@ -190,7 +233,7 @@ UI kit were installed for Phase 1.
 `FRONTEND_DEPENDENCY_REVIEW.md`. This crosses a **major-version boundary** and
 is not an upstream-supported combination. The earlier review tested selected
 merge/provider behavior; the scaffold's checks do not validate future interactive
-UI or authentication. Keep the caveat explicit, retest when implementing UI, and
+UI or authentication. Keep the caveat explicit, verify the new UI in Phase 10, and
 remove the override only after an upstream patched Flowbite release is reviewed.
 There is no direct `deepmerge-ts` dependency or global PostCSS override.
 
@@ -203,16 +246,30 @@ npm ls --all
 ```
 
 Zero npm findings are a point-in-time dependency result, not an application
-security guarantee. Authentication, user isolation, UI interactions and deployment
-security remain unimplemented and untested.
+security guarantee. Shared UI interactions are implemented but untested;
+authentication, user isolation and deployment security remain unimplemented and untested.
 
-## Phase 1 verification status
+## Phases 1–2 verification status
 
-New Node-runner cases are authored for profile conversion/normalization, queries,
-response contracts, architectural conventions and palette contrast. They have
+Node-runner cases are authored for profile conversion/normalization, queries,
+response contracts, architecture, palette contrast, navigation and shared UI source
+invariants. They have
 **not been run**. Lint, typecheck, build, audit and runtime checks have not been
-rerun for these changes either. The architecture checks become substantive as
-components and routes are added in later phases.
+rerun for these changes either. Source assertions do not render components and
+cannot verify focus, hydration, responsive CSS or Flowbite compatibility.
+
+Final UI checks must include:
+
+- Root preview, unknown route, loading/error fallbacks and frontend health behavior.
+- Keyboard skip link, visible focus, menu expansion and active-route announcements.
+- Mobile/desktop layouts, zoom and no horizontal overflow at navigation breakpoints.
+- Dialog cancel-first focus, Escape/backdrop, focus return, pending guards and errors.
+- Actual generated theme classes, provider synchronization and hydration/console warnings.
+- No private data, credentials or raw error details in markup, logs or browser storage.
+
+No browser/renderer automation has been installed or run; additional tooling needs
+the separate approval described in the local plan. Live user-owned workflows remain
+blocked until an approved test identity and disposable writable database are supplied.
 
 Fixtures create no real Clerk accounts, sessions, database users or profiles.
 There is no runtime mock-auth switch. Do not perform live user-data writes or

@@ -5,7 +5,7 @@ This repository contains two independently runnable projects:
 - [`Frontend/`](Frontend/README.md): Next.js App Router, TypeScript, Flowbite React, Tailwind CSS, Clerk SDK and Zod.
 - [`Backend/`](Backend/README.md): FastAPI, async SQLAlchemy/Postgres, Alembic, Clerk token verification and explainable opportunity matching.
 
-**Frontend remains setup-only.** Backend phases 1–9 are implemented on the `Backend` branch, each pushed separately. It includes profile, opportunities, matching, shortlist/notes and application-data deletion APIs. Migrations and twelve fictional opportunities were applied to the authorized database. Tests were deferred to Phase 9; live Clerk/user-owned database workflows were skipped by request. See `Backend/README.md` for verification limits. This is a prototype, not a production security guarantee.
+**Frontend phases 1–2 are implemented but unverified:** contracts, palette-themed shared components and a public interface preview; Clerk and live API access are still unwired. Phase 1 is pushed to `Frontend`; Phase 2 is recorded separately, with later phases continuing as separate commits. Frontend execution checks are deferred to Phase 10. Backend phases 1–9 are implemented on the `Backend` branch, each pushed separately. It includes profile, opportunities, matching, shortlist/notes and application-data deletion APIs. Migrations and twelve fictional opportunities were applied to the authorized database. Tests were deferred to Phase 9; live Clerk/user-owned database workflows were skipped by request. See each project's README for verification limits. This is a prototype, not a production security guarantee.
 
 `openapi-typescript` is intentionally **not included**. Frontend types will be maintained manually against FastAPI's built-in `/openapi.json`, which documents request/response schemas, bearer authentication, filters, pagination and errors.
 
@@ -23,7 +23,7 @@ npm ci
 npm run dev
 ```
 
-Check <http://localhost:3000/api/health>. There is deliberately no application page at `/`; a 404 there is expected until UI work is requested.
+Open <http://localhost:3000/> for the public interface preview, or check <http://localhost:3000/api/health> for frontend liveness. The preview uses no account or backend data; private workflows are not connected yet.
 
 ### Backend
 
