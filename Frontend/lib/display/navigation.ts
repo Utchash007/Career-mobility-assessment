@@ -22,7 +22,7 @@ export const NAVIGATION_ITEMS = [
   {
     href: APP_ROUTES.opportunities,
     label: "Opportunities",
-    availability: "planned",
+    availability: "available",
   },
   {
     href: APP_ROUTES.recommendations,

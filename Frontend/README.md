@@ -1,12 +1,12 @@
 # Frontend — component-first interface
 
-**Phases 1–4 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–5 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
 `/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
 sign-in/up screens, a session boundary and typed authenticated API adapters are wired.
 `/profile` now reads and replaces a complete profile, with a deliberately confirmed
-fictional sample action. Collections follow in later phases; no live integration has been tested.
+fictional sample action. `/opportunities` adds URL-driven discovery; no live integration has been tested.
 `GET /api/health` still returns `{"status":"ok"}`; it checks neither the backend
 nor external services.
 
@@ -114,6 +114,16 @@ It does not create/change Clerk identity or clear the shortlist. Personal saves 
 the Clerk name; a different saved/sample name is identified explicitly.
 Ambiguous write outcomes block another write until the user reloads saved state.
 Runtime form behavior, focus and actual persistence remain unverified.
+
+### Opportunity discovery
+
+`OpportunityMeta` and `OpportunityCard` render backend data. Common controlled
+`CollectionFilters` compose endpoint-specific controls; applied filters live only
+in the URL. Apply resets page 1; pagination preserves validated filters. Reload and
+back/forward navigation reconstruct the applied search. Invalid URL parameters
+receive reset guidance, distinct from zero results or an out-of-range page.
+Totals are backend metadata; there is no local filtering or catalog-wide fetch.
+Details and shortlist actions follow in later phases.
 
 ## Color scheme
 
