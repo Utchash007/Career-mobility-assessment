@@ -1,11 +1,12 @@
 # Frontend — component-first interface
 
-**Phases 1–3 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–4 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
 `/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
 sign-in/up screens, a session boundary and typed authenticated API adapters are wired.
-Feature forms and collections follow in later phases; no live integration has been tested.
+`/profile` now reads and replaces a complete profile, with a deliberately confirmed
+fictional sample action. Collections follow in later phases; no live integration has been tested.
 `GET /api/health` still returns `{"status":"ok"}`; it checks neither the backend
 nor external services.
 
@@ -99,6 +100,20 @@ Dialog open/pending state and mutation behavior belong to the caller. Pending
 disables both actions and dismissal; the shared dialog never performs requests.
 `ErrorState` accepts an error reason, not an exception or server message. Supply
 retry only for an explicitly safe action, not automatic mutation replay.
+
+### Profile workflow
+
+Controlled identity, education, experience, skills, language, preferences and
+work-authorisation leaves compose `ProfileForm`; `ProfileScreen` performs server reads.
+The form owns one draft and saved baseline. It does not reset on background refresh,
+autosave, store drafts in the browser or mutate data on mount. Errors preserve edits;
+dotted backend errors focus the related field. Language rows have stable draft IDs.
+All supported country/language choices remain editable, not just suggested countries.
+Sample replacement confirms both saved data and unsaved edits, then calls the backend.
+It does not create/change Clerk identity or clear the shortlist. Personal saves use
+the Clerk name; a different saved/sample name is identified explicitly.
+Ambiguous write outcomes block another write until the user reloads saved state.
+Runtime form behavior, focus and actual persistence remain unverified.
 
 ## Color scheme
 

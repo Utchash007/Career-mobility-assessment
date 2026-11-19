@@ -18,7 +18,7 @@ export interface NavigationItem {
 // Only link to implemented screens. Later phases explicitly enable their routes.
 export const NAVIGATION_ITEMS = [
   { href: APP_ROUTES.home, label: "Home", availability: "available" },
-  { href: APP_ROUTES.profile, label: "Profile", availability: "planned" },
+  { href: APP_ROUTES.profile, label: "Profile", availability: "available" },
   {
     href: APP_ROUTES.opportunities,
     label: "Opportunities",
