@@ -1,0 +1,31 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!!**/node_modules",
+      "!!**/.next",
+      "!!**/out",
+      "!!**/.flowbite-react/class-list.json",
+      "!!**/.flowbite-react/init.tsx",
+      "!!**/package-lock.json",
+      "!!**/next-env.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}

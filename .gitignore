@@ -1,0 +1,43 @@
+# Environment files and secrets
+.env*
+*.env
+*.env.*
+
+# Local agent configuration and planning documents are not published
+.agents/
+.kiro/
+opencode.json
+skills-lock.json
+*.[mM][dD]
+*.[mM][aA][rR][kK][dD][oO][wW][nN]
+*.[mM][dD][xX]
+![rR][eE][aA][dD][mM][eE].[mM][dD]
+
+# JavaScript dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python environments, bytecode and tool caches
+.venv/
+__pycache__/
+pycache/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Test output
+coverage/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+
+# Local logs and operating-system files
+*.log
+.DS_Store
+Thumbs.db
