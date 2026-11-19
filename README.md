@@ -1,123 +1,346 @@
-# Career Mobility Platform
+<div align="center">
 
-**Latest deployment/auth/UI edits:** verification was stopped at the user's request.
-The single-service Dockerfile, standalone/request-time frontend configuration, session-status fix
-and avatar-placement change have not been built or tested. The redirect follow-up
-has no completed final build. Earlier results below apply to previously verified code.
-The local root `.env` origin allowlists were corrected to accept both localhost:3000
-and 127.0.0.1:3000; restart the backend to load this untested configuration fix.
+<h1>Career Mobility 🚀🌍</h1>
 
-This repository contains two independently runnable projects:
+<h3>Career Assessment &amp; Opportunity Matching Platform</h3>
 
-- [`Frontend/`](Frontend/README.md): Next.js App Router, TypeScript, Flowbite React, Tailwind CSS, Clerk SDK and Zod.
-- [`Backend/`](Backend/README.md): FastAPI, async SQLAlchemy/Postgres, Alembic, Clerk token verification and explainable opportunity matching.
+<p>Understand your strengths, explore opportunities, and plan your next career move with explainable recommendations.</p>
 
-**Frontend phases 1–9 are implemented, with previously recorded Phase 10 credential-free checks:** palette-themed component-first UI, Clerk authentication, profile/sample forms, opportunity discovery, ranked matching/details, shortlist/notes, dashboard and application-data deletion. The latest completed test run recorded **102 passed**; earlier lint/typecheck/build and safe setup-health probe results are documented in `Frontend/README.md` with their revision limits. Unchanged Phase 10 npm audit results report zero vulnerabilities. Browser interactions and live Clerk/persistence/isolation/deletion remain unverified and need fresh authorization. Frontend phases and follow-ups are maintained on `Frontend`, separately from `main`. Backend phases 1–9 are implemented on `Backend`, each pushed separately; their source is also present on `Frontend`. Migrations and twelve fictional opportunities were applied to the authorized database. This is a prototype, not a production security guarantee.
+<p>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&amp;logo=react&amp;logoColor=61DAFB" alt="React" /></a>
+  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&amp;logo=nextdotjs&amp;logoColor=white" alt="Next.js" /></a>
+  <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&amp;logo=fastapi&amp;logoColor=white" alt="FastAPI" /></a>
+  <a href="https://www.postgresql.org"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&amp;logo=postgresql&amp;logoColor=white" alt="PostgreSQL" /></a>
+  <a href="https://clerk.com"><img src="https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&amp;logo=clerk&amp;logoColor=white" alt="Clerk" /></a>
+  <a href="https://www.docker.com"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&amp;logo=docker&amp;logoColor=white" alt="Docker" /></a>
+  <a href="https://render.com"><img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&amp;logo=render&amp;logoColor=000000" alt="Render" /></a>
+</p>
 
-`openapi-typescript` is intentionally **not included**. Frontend types will be maintained manually against FastAPI's built-in `/openapi.json`, which documents request/response schemas, bearer authentication, filters, pagination and errors.
+<p>
+  <a href="#about-the-project">About</a> ·
+  <a href="#tech-stack">Tech Stack</a> ·
+  <a href="#database-schema">Database Schema</a> ·
+  <a href="#deploy-to-render">Deploy</a> ·
+  <a href="#local-development">Run Locally</a>
+</p>
 
-## Run locally
+</div>
 
-Prerequisites: **Node 24.22.3 LTS + npm 11.20.0** for the frontend; **uv + managed Python 3.13.18** for the backend. See each project's README for environment setup and verification commands, including the workaround for older uv versions that cannot download the pinned Python release. Keep runtimes consistent between local development and hosting. Global Node/Python installations were not replaced.
+---
 
-Open two terminals from this workspace:
+## About the Project
 
-### Frontend
+**Career Mobility** helps people compare their background with job and internship
+requirements. Users build a profile, browse opportunities, review ranked matches,
+and keep a personal shortlist with notes.
 
-```powershell
-cd Frontend
-npm ci
-npm run dev
+Rather than presenting an unexplained score, the platform shows how **skills,
+languages, experience, education, and location preferences** contribute to each
+recommendation. Eligibility concerns are shown separately so a good skills match
+is not mistaken for confirmed work authorisation or hiring eligibility.
+
+Matching uses deterministic backend rules—not an AI model. Missing information
+stays unknown instead of being filled with invented answers. The included catalog
+contains twelve fictional opportunities for demonstration.
+
+### Features
+
+- **In-app authentication:** Clerk sign-in, registration, and account management.
+- **Career profiles:** Education, experience, skills, languages, preferences, and work authorisation.
+- **Opportunity discovery:** Search and filter jobs and internships by country, type, and work mode.
+- **Explainable matching:** Ranked recommendations with criterion scores, reasons, and eligibility flags.
+- **Private shortlists:** Save opportunities and maintain personal notes.
+- **Dashboard:** Profile overview, opportunity totals, saved items, and top matches.
+- **Data control:** Delete application-owned profile and shortlist data without deleting the Clerk identity.
+
+## Tech Stack
+
+| Layer | Technologies | Purpose |
+| --- | --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript | App Router pages and component-based interface |
+| Styling | Tailwind CSS 4, Flowbite React | Responsive layouts, forms, navigation, and shared UI |
+| Authentication | Clerk | User identities, sign-in flows, and signed session tokens |
+| Backend | Python 3.13, FastAPI, Uvicorn | REST API, authorisation, matching, and business logic |
+| Validation | Zod, Pydantic | Frontend contracts and backend request/response validation |
+| Database | PostgreSQL, Neon | Persistent profiles, opportunities, and shortlist data |
+| Data access | SQLAlchemy, asyncpg | Async database queries and transactions |
+| Migrations | Alembic | Versioned database schema changes |
+| Token verification | PyJWT, cryptography | Verify Clerk session signatures, issuer, expiry, and allowed origins |
+| Tooling | npm, uv, Biome, Ruff | Locked dependencies and code quality tooling |
+| Deployment | Docker, Render, Tini | One container running both application servers |
+
+The frontend and backend remain separate projects in the repository, but production
+deployment uses **one root Dockerfile and one Render Web Service**.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser"] -->|HTTPS| Web
+    Browser -->|Sign in| Clerk["Clerk"]
+    Clerk -->|Session token| Browser
+
+    subgraph Container["One Docker container on Render"]
+        Web["Next.js · public PORT"] -->|API requests and server reads| API["FastAPI · 127.0.0.1:8000"]
+    end
+
+    API -->|Async queries| DB[("PostgreSQL / Neon")]
 ```
 
-Open <http://localhost:3000/> for the authenticated dashboard, or check <http://localhost:3000/api/health> for public frontend liveness. Missing Clerk configuration shows an app-branded sign-in-unavailable screen without private data or API-key instructions for users. Match backend CORS and Clerk authorized parties to this exact frontend origin.
+- Next.js serves the interface and forwards `/api/v1/*` requests to FastAPI.
+- FastAPI owns API authentication, resource ownership, persistence, scoring, ranking, and totals.
+- Browser API calls use the same public HTTPS origin as the frontend.
+- Server-side reads reach FastAPI through the container's private loopback address.
+- Clerk owns identities; PostgreSQL stores application data, not passwords.
+- Tini and the Dockerfile's embedded launcher manage startup and shutdown of both servers.
 
-### Backend
+## Database Schema
 
-```powershell
-cd Backend
-uv sync --locked --managed-python
-uv run --locked --managed-python uvicorn app.main:create_app --factory --reload --host 127.0.0.1 --port 8000
+The database has three application tables: **profiles**, **opportunities**, and
+**shortlist**. A Clerk user ID identifies the owner of a profile; there is no local
+`users` table or password store.
+
+```mermaid
+erDiagram
+    PROFILES ||--o{ SHORTLIST : owns
+    OPPORTUNITIES ||--o{ SHORTLIST : saved_in
+
+    PROFILES {
+        text user_id PK "Clerk user ID"
+        text full_name
+        date birthday "nullable"
+        jsonb education
+        smallint experience_years "nullable"
+        text[] skills
+        jsonb languages
+        text[] preferred_locations
+        text[] career_interests
+        jsonb work_authorisation
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    OPPORTUNITIES {
+        bigint id PK "generated identity"
+        text slug UK
+        text title
+        text organisation
+        text description
+        text country "nullable for global remote roles"
+        text city "nullable except onsite roles"
+        text type "job or internship"
+        text experience_level
+        smallint min_years
+        smallint max_years "nullable"
+        text[] required_skills
+        text[] preferred_skills
+        jsonb education_requirements
+        jsonb languages
+        jsonb eligibility_requirements
+        text work_mode "onsite, hybrid, or remote"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    SHORTLIST {
+        bigint id PK "generated identity"
+        text user_id FK
+        bigint opportunity_id FK
+        text note "maximum 500 characters"
+        timestamptz created_at
+        timestamptz updated_at
+    }
 ```
 
-Check <http://127.0.0.1:8000/health>.
+### Model Responsibilities
 
-Stop either development server with `Ctrl+C`.
-
-## Deploy to Render with Docker (no Compose)
-
-Create **one Docker Web Service** using the repository-root `Dockerfile`. It builds
-and runs **both Next.js and FastAPI in one container**. Do not create a second
-Render service. There is no Compose, Blueprint or separate launcher file.
-
-| Render setting | Value |
+| Model | Stores |
 | --- | --- |
-| Language | Docker |
-| Branch | `Frontend` |
-| Root Directory | Leave empty (repository root) |
+| `profiles` | One user's career background, preferences, and declared work authorisation |
+| `opportunities` | Role descriptions, location details, skills, and structured requirements |
+| `shortlist` | A user's saved opportunity and optional personal note |
+
+**Relationships and constraints:**
+
+- Each Clerk user can have one profile, keyed by `user_id`.
+- Each profile can have many shortlist entries; each opportunity can be saved by many users.
+- `(user_id, opportunity_id)` is unique, preventing duplicate saves.
+- Shortlist foreign keys cascade when the associated profile or opportunity is deleted.
+- Opportunity slugs are unique; generated numeric IDs identify opportunities and shortlist entries.
+- Experience ranges, supported role/work-mode values, note length, and collection sizes are validated.
+- Structured education, language, and eligibility data use `JSONB`; string collections use PostgreSQL arrays.
+- All three tables track timezone-aware creation and update timestamps.
+
+Match results are **computed on demand**, not stored in another table. The matcher
+combines known criterion scores and returns a label such as strong, partial, weak,
+not recommended, or insufficient data. Unknown criteria do not become automatic
+failures; critical eligibility flags can mark a role as not recommended independently
+of its numeric score.
+
+## Project Structure
+
+```text
+.
+├── Dockerfile                 # Both apps in one production container
+├── .dockerignore              # Excludes local secrets and generated files
+├── Frontend/
+│   ├── app/                   # Next.js routes and layouts
+│   ├── components/            # Screens and reusable UI
+│   ├── hooks/                 # Client workflow hooks
+│   ├── lib/                   # Contracts, API transport, forms, and display helpers
+│   └── package-lock.json      # Locked JavaScript dependencies
+└── Backend/
+    ├── app/
+    │   ├── api/               # Health and versioned REST endpoints
+    │   ├── core/              # Configuration, authentication, and errors
+    │   ├── db/                # Models, repositories, and seed command
+    │   ├── schemas/           # Pydantic API contracts
+    │   └── services/          # Business logic and matching engine
+    ├── alembic/               # Database migrations
+    └── uv.lock                # Locked Python dependencies
+```
+
+## Deploy to Render
+
+### 1. Prepare Authentication and Database
+
+Use a Clerk instance and a PostgreSQL database, such as Neon. Obtain the Clerk
+publishable key, server secret key, and **PEM public signing key** from the same
+instance. Configure Clerk for your deployed application domain.
+
+PostgreSQL is hosted separately; the application Dockerfile does not run a database
+server or store database files inside the container.
+
+### 2. Create One Docker Web Service
+
+In Render, choose **New → Web Service**, connect this repository, and use:
+
+| Setting | Value |
+| --- | --- |
+| Branch | `main` |
+| Language / Runtime | `Docker` |
+| Root Directory | Leave empty |
 | Dockerfile Path | `./Dockerfile` |
 | Docker Build Context | `.` |
 | Docker Command | Leave empty |
 | Health Check Path | `/health` |
 
-Next.js listens on `0.0.0.0` and Render's `PORT` (default `10000`). FastAPI listens
-only on `127.0.0.1:8000` inside the same container. Next.js forwards `/api/v1/*`
-requests and `/health` to FastAPI without implementing business logic or modifying
-bearer tokens. FastAPI still verifies every protected API request. Browser calls
-use the **same public origin** as the frontend; server-side reads use the private
-loopback URL. `/health` goes through both servers, while `/api/health` checks only
-Next.js. Neither checks the database or live Clerk service.
+**Only one Render Web Service is needed.** Next.js listens on Render's public
+`PORT` (default `10000`); FastAPI listens privately on `127.0.0.1:8000` in the same
+container. No Docker Compose or second application service is required. Both apps
+share the instance's CPU and memory.
 
-The Dockerfile contains its entire lifecycle launcher. Tini handles PID 1 duties;
-Bash starts both servers and stops both if either exits or Render shuts down the
-container. Both apps run as a non-root user. CPU and memory are shared by both apps.
+### 3. Add Render Environment Variables
 
-Put **all** configuration in this one service's **Render Environment** settings:
+Set these in the service's **Environment** settings. Do not upload or commit `.env`
+files. In the examples below, replace `career-mobility.onrender.com` with your
+actual service hostname.
 
-| Variable | Value |
+| Variable | Value / purpose |
 | --- | --- |
-| `NEXT_PUBLIC_API_URL` | **This same service's** public HTTPS origin, e.g. `https://career-mobility.onrender.com`, without `/api/v1` |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Your Clerk instance's publishable key |
-| `CLERK_SECRET_KEY` | Same instance's server secret key; runtime only |
+| `NEXT_PUBLIC_API_URL` | This **same service's** HTTPS origin, e.g. `https://career-mobility.onrender.com`, without `/api/v1` or another path |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
+| `CLERK_SECRET_KEY` | Clerk server secret; runtime only |
 | `ENV` | `production` |
-| `AUTH_MODE` | `clerk` (fail startup if trusted auth configuration is missing) |
-| `JWKS_PUBLIC_KEY` | That instance's PEM public signing key; actual or escaped newlines |
-| `CORS_ORIGINS` | The same service origin as JSON, e.g. `["https://career-mobility.onrender.com"]` |
-| `CLERK_AUTHORIZED_PARTIES` | Same exact public-origin JSON list; **not** `127.0.0.1:8000` |
-| `DATABASE_URL` | Direct Postgres URL when paired with `DATABASE_URL_POOLED` |
-| `DATABASE_URL_POOLED` | Pooled Postgres URL used for application connections |
-| `DIRECT_URL` | Optional explicit direct URL for separately authorized migrations |
+| `AUTH_MODE` | `clerk` |
+| `JWKS_PUBLIC_KEY` | Clerk's PEM public signing key, not a JWKS URL or JSON document; actual or escaped newlines are supported |
+| `CORS_ORIGINS` | JSON array of public frontend origins, e.g. `["https://career-mobility.onrender.com"]` |
+| `CLERK_AUTHORIZED_PARTIES` | The same exact public-origin JSON array |
+| `DATABASE_URL` | PostgreSQL connection URL; use the direct URL when paired with `DATABASE_URL_POOLED` |
+| `DATABASE_URL_POOLED` | Optional pooled PostgreSQL URL for application connections |
+| `DIRECT_URL` | Optional explicit direct database URL for migrations |
 
-Replace the example hostname with your actual Render hostname. Update both origin
-lists if you add a custom domain. Configure your production Clerk instance for that
-public domain; no hard-coded admin token claim is needed. The Dockerfile sets
-`API_INTERNAL_URL` and `PANAMA_SINGLE_CONTAINER` automatically; do not override them.
+Both origin lists must name the **public application URL**, not the private backend
+address. Update them when adding a custom domain. Use keys from the same Clerk
+instance, and never place database credentials or the Clerk secret in a
+`NEXT_PUBLIC_*` variable.
 
-Render supplies environment settings at runtime and as Docker build arguments.
-Only the two public `NEXT_PUBLIC_*` arguments are consumed by the frontend build.
-Set both before the first build; changes require rebuilding, not just restarting.
-Clerk's secret and database credentials are runtime-only: no secret build arguments
-are declared and no `.env` is included in the image. Request-time frontend rendering
-avoids requiring Clerk secrets during the build. The root `.dockerignore` excludes
-local credentials, agent folders, dependencies, caches and non-README Markdown.
+Render also makes environment settings available as Docker build arguments. The
+Dockerfile consumes **only** `NEXT_PUBLIC_API_URL` and
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` during the frontend build. Set both before the
+first build; changing either later requires a **rebuild**, not just a restart.
+Server secrets are runtime-only and are not baked into image layers.
 
-The container does **not** run migrations or seed data at startup. For a separately
-authorized new database, use `cd /app/Backend && alembic upgrade head` in Render's
-shell or Pre-Deploy Command (where your plan supports it), with a direct URL set.
-Do not migrate an unapproved database. This single-service correction is
-source-reviewed only, not built, tested or deployed, per the user's instruction.
+`PORT`, `PANAMA_SINGLE_CONTAINER`, and `API_INTERNAL_URL` are handled by the image
+or Render. Do not replace the image's internal routing configuration.
 
-## Configuration and dependency safety
+### 4. Deploy and Initialise a New Database
 
-- Keep the shared `.env` in the repository root; neither app requires moving or copying it. Both apps also support an optional `.env` inside their own folder. Real environment variables override project-local values, which override root values (per key). Backend paths are absolute; frontend root lookup is relative to its loader, not the terminal's working directory.
-- All `.env*` files (including example templates), agent folders/configuration, dependencies, caches, and Markdown except README files are excluded from Git. Planning documents remain local.
-- Shared names: `DATABASE_URL` (direct when paired), `DATABASE_URL_POOLED` (application pool), `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `JWKS_PUBLIC_KEY`. Backend verification uses a trusted issuer, the PEM public signing key and exact allowed frontend origins; no Clerk secret-key call is needed. See `Backend/README.md`. Never expose server secrets through `NEXT_PUBLIC_*` variables.
-- Standard Neon `postgresql://` URLs are accepted and normalized for asyncpg in memory; environment loaders do not rewrite the root `.env`. Only explicitly referenced `NEXT_PUBLIC_*` values can enter frontend browser bundles; do not add secrets to Next.js's `env` configuration.
-- Commit `Frontend/package-lock.json` and `Backend/uv.lock`; use locked installs rather than resolving fresh versions on every run.
-- The frontend requires the documented, narrowly scoped Flowbite `deepmerge-ts` security override. It crosses a major version, so retain the caveat and retest before introducing UI interactions.
-- Both health endpoints are scaffold liveness checks, not database, authentication or service-readiness guarantees.
-- Business endpoints require verified Clerk bearer session tokens; `/health` stays public. `DELETE /api/v1/me` deletes application data, not the Clerk account or session.
+Save the environment settings and trigger a build/deploy. The container does not
+automatically migrate or seed the database. Once the service is running, initialise
+a new, intended target database from Render's shell:
 
-## Existing design references
+```sh
+cd /app/Backend
+alembic upgrade head
+```
 
-Assessment, project plan, schema, API-contract and dependency-review Markdown documents are local-only and deliberately not published. Actual scaffold manifests and lockfiles are the source of truth for installed dependencies.
+Migrations require a direct connection: set `DIRECT_URL`, or supply the paired
+direct `DATABASE_URL` and pooled `DATABASE_URL_POOLED`. Where your Render plan
+supports it, the equivalent Pre-Deploy Command is
+`cd /app/Backend && alembic upgrade head`.
+
+**Optional demo catalog:** from the same backend directory, explicitly load the
+twelve fictional opportunities:
+
+```sh
+python -m app.db.seed --apply
+```
+
+This command upserts catalog rows by slug and does not create user profiles.
+Migration and seed commands change the configured database; run them only after
+confirming the intended target. Neither is required on every container restart.
+
+### 5. Open the Application
+
+After deployment and database initialisation, open the service's public URL to
+sign in, create a profile, explore opportunities, and view matches.
+
+- `/health` reaches FastAPI through Next.js, checking that both servers can respond.
+- `/api/health` checks Next.js alone.
+- Health responses do not verify database connectivity or Clerk authentication.
+
+The latest container setup has not been build/runtime-verified in this workspace;
+do not treat a configured Dockerfile or green liveness endpoint as proof that all
+authentication and persistence workflows have been validated.
+
+## Local Development
+
+**Requirements:** Node.js **24.22.3**, npm **11.20.0**, and uv with Python **3.13.18**.
+
+Keep local configuration in the repository-root `.env`, or use project-local
+environment files. Process environment values take precedence over project-local
+values, which take precedence over root values. Environment files remain excluded
+from Git and Docker builds.
+
+For local development, use `http://127.0.0.1:8000` as `NEXT_PUBLIC_API_URL`. Allow
+your browser's frontend origin in both backend origin lists; `localhost` and
+`127.0.0.1` are different origins.
+
+**Frontend terminal:**
+
+```sh
+cd Frontend
+npm ci
+npm run dev
+```
+
+**Backend terminal:**
+
+```sh
+cd Backend
+uv sync --locked --managed-python
+uv run --locked --managed-python uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload
+```
+
+Open `http://localhost:3000`. Apply migrations to an intended local/development
+database before using persistence-dependent workflows.
+
+See [Frontend/README.md](Frontend/README.md) and [Backend/README.md](Backend/README.md)
+for project-specific configuration and verification details.
+
+---
+
+**Prototype scope:** Recommendations support exploration, not hiring decisions or
+legal advice. Catalog examples are fictional, and work authorisation or other
+eligibility requirements still need independent confirmation.
