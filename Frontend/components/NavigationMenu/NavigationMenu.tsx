@@ -28,11 +28,12 @@ export default function NavigationMenu({ items }: NavigationMenuProps) {
     <>
       <NavbarToggle
         type="button"
+        className="order-2 ml-auto"
         aria-controls={menuId}
         aria-expanded={isOpen ?? false}
         aria-label={isOpen ? "Close navigation" : "Open navigation"}
       />
-      <NavbarCollapse id={menuId}>
+      <NavbarCollapse id={menuId} className="order-4 lg:order-2 lg:ml-auto">
         {items.map((item) => {
           if (item.availability === "planned") {
             return (

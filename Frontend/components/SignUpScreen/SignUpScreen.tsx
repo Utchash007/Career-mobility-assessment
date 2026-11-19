@@ -1,28 +1,22 @@
 import { SignUp } from "@clerk/nextjs";
-import Link from "next/link";
 import { Suspense } from "react";
+import AuthLayout from "@/components/AuthLayout/AuthLayout";
 import LoadingState from "@/components/LoadingState/LoadingState";
+import { CLERK_AUTH_APPEARANCE } from "@/lib/display/clerk-appearance.ts";
 
 export default function SignUpScreen() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-xl flex-col items-center gap-8 px-4 py-12">
-      <Link href="/" className="font-semibold text-action">
-        Career Mobility
-      </Link>
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold">Start your journey</h1>
-        <p className="text-sm">
-          Clerk manages your identity. Application data remains separate.
-        </p>
-      </div>
-      <Suspense fallback={<LoadingState />}>
+    <AuthLayout>
+      <Suspense fallback={<LoadingState label="Loading sign-up form..." />}>
         <SignUp
           routing="path"
           path="/sign-up"
           signInUrl="/sign-in"
           fallbackRedirectUrl="/"
+          appearance={CLERK_AUTH_APPEARANCE}
+          fallback={<LoadingState label="Loading sign-up form..." />}
         />
       </Suspense>
-    </main>
+    </AuthLayout>
   );
 }

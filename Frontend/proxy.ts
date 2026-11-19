@@ -6,7 +6,12 @@ import {
 } from "next/server";
 import { authenticationConfigured } from "@/lib/auth/config.ts";
 
-const authenticate = clerkMiddleware();
+// Server auth redirects do not inherit the browser ClerkProvider's URLs.
+// Keep authentication pages in this app rather than Clerk's hosted portal.
+const authenticate = clerkMiddleware({
+  signInUrl: "/sign-in",
+  signUpUrl: "/sign-up",
+});
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
   // Liveness never requires identity or creates an application in keyless mode.

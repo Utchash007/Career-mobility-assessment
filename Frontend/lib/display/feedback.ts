@@ -41,11 +41,9 @@ export const CONFIGURATION_COPY = {
       "Profile, opportunities, matches and shortlist become available as their screens are implemented.",
   },
   authentication: {
-    title: "Authentication setup is required",
-    description:
-      "Sign-in and private workflows are unavailable until Clerk is configured. There is no mock-user fallback.",
-    nextStep:
-      "Set Clerk's public configuration and server-only secret in a local environment file, then restart the frontend. Keep all values private.",
+    title: "Sign-in is temporarily unavailable",
+    description: "We could not open the sign-in form right now.",
+    nextStep: "Please try again later. You do not need to change your account.",
   },
   api: {
     title: "API setup is required",

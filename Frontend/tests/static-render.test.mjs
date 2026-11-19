@@ -22,6 +22,8 @@ const [
   OpportunityRequirements,
   OpportunityMeta,
   ProfileSummary,
+  AuthLayout,
+  SetupScreen,
 ] = await Promise.all(
   [
     "MatchScore",
@@ -31,6 +33,8 @@ const [
     "OpportunityRequirements",
     "OpportunityMeta",
     "ProfileSummary",
+    "AuthLayout",
+    "SetupScreen",
   ].map(
     async (name) => (await import(`../components/${name}/${name}.tsx`)).default,
   ),
@@ -167,4 +171,28 @@ test("global remote metadata and privacy-minimal profile output are explicit", (
   const html = render(ProfileSummary, { profile });
   assert.match(html, /0 years/);
   assert.doesNotMatch(html, /1998-04-12|user_fictional/);
+});
+
+test("the auth frame renders one main landmark, app branding and escaped content", () => {
+  const html = render(AuthLayout, {
+    children: createElement("p", null, "<fictional account content>"),
+  });
+  assert.equal(html.match(/<main\b/g)?.length, 1);
+  assert.match(html, /aria-label="Career Mobility account access"/);
+  assert.match(html, /aria-label="Career Mobility home"/);
+  assert.match(html, /max-w-sm/);
+  assert.match(html, /items-center justify-center/);
+  assert.doesNotMatch(html, /<aside\b|grid-cols|Your next chapter/);
+  assert.match(html, /&lt;fictional account content&gt;/);
+});
+
+test("the unconfigured screen renders user-safe copy and a full-page retry link", () => {
+  const html = render(SetupScreen);
+  assert.match(html, /Welcome to Career Mobility/);
+  assert.match(html, /Sign-in is temporarily unavailable/);
+  assert.match(html, /<a\b[^>]*href="\/sign-in"[^>]*>Try again<\/a>/);
+  assert.doesNotMatch(
+    html,
+    /<form\b|<input\b|Clerk|API key|secret|environment|Career Mobility setup/i,
+  );
 });

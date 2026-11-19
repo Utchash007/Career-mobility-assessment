@@ -1,9 +1,18 @@
 # Frontend — component-first interface
 
+**Latest deployment/auth/UI follow-up:** the user interrupted the build and requested
+no further tests or builds. Docker packaging, standalone/request-time configuration,
+session-status compatibility and avatar placement are source-reviewed only; earlier
+results below do not verify those edits or a completed build of the redirect change.
+Configuration inspection then found that both local backend origin lists allowed
+127.0.0.1:3000 but excluded localhost:3000. The ignored root `.env` now allows both
+loopback origins, without changing credentials. Restart the backend to reload it;
+no tests, builds or live authentication requests were run for this configuration fix.
+
 **Phases 1–9 are implemented; Phase 10 credential-free checks pass.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
-`/` now requires sign-in and renders the dashboard. Clerk prebuilt
+`/` now requires sign-in and renders the dashboard. App-branded Clerk prebuilt
 sign-in/up screens, a session boundary and typed authenticated API adapters are wired.
 `/profile` now reads and replaces a complete profile, with a deliberately confirmed
 fictional sample action. Opportunities, ranked matches, details, shortlist/notes and
@@ -12,8 +21,11 @@ application-data deletion are implemented; no live integration has been tested.
 nor external services.
 
 Phase 1 was pushed to `origin/Frontend` as `33317a1`. Phases 2–10 are separate
-local commits; no later push or merge is assumed. Browser interactions and live
+commits on the same `Frontend` branch, which is also the Docker deployment branch;
+`main` is not merged or changed by this follow-up. Browser interactions and live
 Clerk/persistence/isolation/deletion still require separately approved verification.
+The auth-presentation follow-up provides a compact centered card matching
+the supplied reference, account-oriented copy and a user-safe unavailable screen.
 
 ## Routes and data flow
 
@@ -27,7 +39,7 @@ Clerk/persistence/isolation/deletion still require separately approved verificat
 | `/shortlist` | Protected saved opportunities and private notes |
 | `/account` | Protected application-data deletion; Clerk identity stays separate |
 | `/sign-in`, `/sign-up` | Public Clerk catch-all authentication screens |
-| `/setup` | Public missing-configuration guidance |
+| `/setup` | Public sign-in-unavailable screen when authentication cannot be initialized |
 | `/api/health` | Public Next liveness, not backend/database readiness |
 
 Initial reads run in Server Components through the typed FastAPI client. Interactive
@@ -100,6 +112,7 @@ Every name below uses `components/<Name>/<Name>.tsx`:
 | `NavigationMenu`, `AppNavigation` | Active links, responsive menu and optional account-content slot |
 | `LinkButton` | Client-side Flowbite/NextLink adapter; only serializable props cross from server screens |
 | `AppShell`, `AppProviders` | Landmarks/skip link, page children and initialized Flowbite theme |
+| `AuthLayout` | Compact centered sign-in/up/unavailable card and app mark; no auth logic or credential inputs |
 | `NotFoundScreen` | Safe unknown-route/resource presentation with a fixed internal home link |
 | `WorkflowPreviewCard`, `HomeScreen` | Retained earlier-phase static overview, not exposed as an active route |
 
@@ -215,6 +228,13 @@ Flowbite buttons, inputs/selects/textareas, alerts, cards, progress, spinner, mo
 and navigation through the providers.
 Overridden leaves replace the corresponding defaults; other Flowbite defaults remain.
 Clerk's appearance uses the same palette through `lib/display/clerk-appearance.ts`.
+Auth-only card, input and action overrides use Clerk's built-in simple theme and
+the `clerk` CSS layer before Tailwind utilities. The outer frame owns the small
+app mark and single border; the embedded form is flush, with stacked social buttons
+above the email/identifier field, compact controls and a black primary action.
+Initial Clerk headings are localized rather than duplicated outside the widget.
+Verification headings, recovery
+actions, enabled authentication methods and Clerk branding are not hidden.
 Styling is not verified accessibility.
 
 ## Toolchain and installation
@@ -288,7 +308,10 @@ do not enable all install scripts blindly.
 
 ### Environment and authentication
 
-Missing Clerk configuration shows `/setup`, never a private fixture screen.
+Missing Clerk configuration shows a branded sign-in-unavailable screen at `/setup`,
+never a private fixture screen, pretend login form or API-key instructions for users.
+Its retry link performs a full-page reload. Configuration instructions belong in
+this developer README, not the account sign-in UI.
 Keep shared credentials in the repository root `.env`. Next.js first
 loads `Frontend/.env*` in its normal precedence order; `next.config.ts` then loads the
 root `.env` for missing values only, using Node's dotenv parser. Real environment
@@ -304,15 +327,35 @@ Public variables are inlined at build time when referenced; rebuild after changi
 
 Clerk is wired through the server-owned `AppProviders`; `FlowbiteProvider` owns
 client theme initialization. Each protected page calls `await auth.protect()`.
-The proxy delegates to bare `clerkMiddleware()` when configured and otherwise
-rewrites to setup guidance. Keyless auto-provisioning is disabled; no Clerk CLI,
+The proxy initializes `clerkMiddleware()` with explicit `signInUrl: "/sign-in"`
+and `signUpUrl: "/sign-up"`, without a route-protection handler, and otherwise
+rewrites to the unavailable screen. Keyless auto-provisioning is disabled; no Clerk CLI,
 instance creation, provider-settings changes or identity creation were performed.
-Catch-all `/sign-in` and `/sign-up` routes use Clerk's prebuilt UI.
+Catch-all `/sign-in` and `/sign-up` routes use Clerk's prebuilt UI inside `AuthLayout`,
+with labeled loading fallbacks. Users sign in with their accounts; they never enter
+Clerk application keys. Available methods follow the existing Clerk instance settings;
+styling does not enable password/social login or change those settings.
+Google, Microsoft and Apple buttons only appear when enabled in the Clerk instance;
+there are no decorative OAuth buttons or invented terms/privacy URLs. All subsequent
+password, recovery, verification and MFA headings/actions keep their original meaning.
+The server redirect URLs must be configured separately from `ClerkProvider` props:
+provider-only configuration lets `auth.protect()` and `auth().redirectToSignIn()`
+fall back to Clerk's hosted Account Portal. Explicit relative middleware URLs keep
+entry-point/session-recovery redirects on the current app origin and preserve the
+requested destination. No new credentials or dashboard changes are needed for this
+routing fix. Restart the frontend and return to its local URL if a browser is already
+on the hosted portal; the open hosted tab cannot pick up local code changes.
 
 API base configuration must be an HTTPS origin (HTTP allowed only for local loopback),
 without credentials, query, hash or a path prefix. Example: `http://127.0.0.1:8000`.
 The backend's `CORS_ORIGINS` and `CLERK_AUTHORIZED_PARTIES` must allow the
 exact frontend origin; `localhost` and `127.0.0.1` are different origins.
+For local development with either address, set both to
+`["http://127.0.0.1:3000","http://localhost:3000"]` and restart the backend.
+Changing `.env` alone does not refresh the running backend's cached settings.
+The Clerk session token's custom `publicMetadata.role` claim is not used by this
+backend and cannot fix a rejected authorized party. Do not set all users to admin
+to troubleshoot sign-in; no custom role claim or JWT template is required.
 Use the existing backend environment-name guidance; do not expose backend credentials.
 Ordinary session tokens are acquired per request, never from a custom JWT template.
 Server reads and browser mutations share response validation, a 15-second timeout,
@@ -321,6 +364,34 @@ business API/BFF, automatic mutation retry or persistent token/profile storage.
 401 offers session recovery; 503 remains unavailable, not an empty success.
 Session changes hide stale server children, remount client drafts and abort old requests.
 Browser interaction and live identity isolation remain unverified.
+
+## Render Docker service
+
+Use `Frontend/Dockerfile` with Root Directory `Frontend`, Dockerfile Path
+`./Dockerfile`, Docker Build Context `.` and branch `Frontend`. Leave Docker Command
+empty and set Health Check Path to `/api/health`. The production image runs the
+standalone Next.js server as the non-root `node` user, binds to `0.0.0.0`, and uses
+Render's `PORT` (default `10000`). No Compose or startup script is needed.
+
+Set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+in this service's Render Environment settings. The first two public values are the
+only declared build arguments; set them before building. Render also supplies all
+configured variables at runtime. Do not declare a `CLERK_SECRET_KEY` build argument
+or copy an environment file into the image. `.dockerignore` excludes local secrets,
+dependencies, caches, tests and non-README Markdown from the build context.
+
+`next.config.ts` uses `output: "standalone"`; the final image copies only its traced
+server files, static assets and the public directory. `app/layout.tsx` forces
+request-time rendering so building without Clerk's secret cannot cache an
+unconfigured provider or require secret credentials during prerendering. Local
+root `.env` fallback still works outside Docker; no environment file is included
+in Render images. Rebuild after changing either public value, not just restart.
+
+Use the backend's public HTTPS origin for `NEXT_PUBLIC_API_URL`, without an API
+path prefix. Match both backend origin lists to the actual deployed frontend URL.
+See the root README for the two-service settings and backend environment table.
+No Docker build, runtime probe, tests or live authentication calls were performed
+for this packaging change.
 
 ## Exact dependency pins
 
@@ -377,23 +448,34 @@ application configuration. Global Node and original environment files were untou
 | Check | Result |
 | --- | --- |
 | Strict locked `npm ci --strict-peer-deps --ignore-scripts` | Passed; no peer/engine warning or lifecycle scripts |
-| `npm test` | **95 passed**; pure contracts/state/transport, source architecture and seven static React/Flowbite rendering cases |
+| `npm test` | **102 passed**; pure contracts/state/transport, source architecture, offline Clerk redirect construction and nine static React/Flowbite rendering cases |
 | `npm run typecheck` | Passed, including generated Next route types |
 | `npm run lint` | Passed; authored source formatted, generated output/Markdown excluded |
 | `npm run build` | Passed with all documented routes and proxy |
 | `npm audit --json`, `npm audit --omit=dev --json` | **0 vulnerabilities** each |
 | `npm ls --all` | Exit 0; platform-specific missing optional packages are expected |
-| Dev + production loopback HTTP probes | Public health 200; eleven URLs each safely rewrote to setup with 200 and no tested fixture data |
+| Dev + production loopback HTTP probes | Public health 200; eleven URLs each safely rewrote to the user-safe unavailable screen with 200 and no tested fixture data or developer key instructions |
 
 `scripts/probe-runtime.mjs` refuses source directories containing `.env*` or a
 process containing application configuration. Run it **only in a credential-free
 snapshot** after building, with `node scripts/probe-runtime.mjs production` and
 `node scripts/probe-runtime.mjs dev`; it starts/stops its own servers on 3211/3210.
 These are setup/health probes, not proof of protected routes with Clerk configured.
+The auth-presentation follow-up repeated tests, lint, typecheck, build and both
+runtime probes in a credential-free snapshot using copied existing dependencies.
+No dependency installation/download, live identity requests or environment edits
+were made. Locked-install, dependency-tree and audit results above remain the
+unchanged Phase 10 baseline.
+`tests/auth-redirect.test.mjs` exercises the installed Clerk SDK URL builder with
+the actual configured middleware paths and a fictional public key, with network
+requests forbidden. It checks both auth routes and return destinations on localhost,
+127.0.0.1 and a fictional HTTPS deployment origin. It is not a live session/sign-in test.
 
 Static rendering uses actual pinned React/Flowbite packages without a DOM/browser.
 It checks zero/null progress, ARIA bounds, palette output, all labels, critical flags,
 escaped text, criterion evidence, requirements, global remote and birthday omission.
+The added auth cases check the shared frame and user-safe unavailable/retry markup,
+not an initialized Clerk widget or successful account login.
 Finalized fictional backend headlines are 95.2 strong, 69.0 partial, German-language
 68.0 not_recommended and senior-manager 56.0 partial. No frontend scoring is tested
 or implemented. Source assertions are not interaction or security proofs.

@@ -161,6 +161,32 @@ There is no additional OpenAPI generator. Health is **process liveness only**, n
 readiness or proof of valid Clerk credentials. Startup and health perform no DB/Clerk
 network requests, including when a database URL is supplied.
 
+## Render Docker service
+
+Use `Backend/Dockerfile` with Root Directory `Backend`, Dockerfile Path
+`./Dockerfile`, Docker Build Context `.` and branch `Frontend` (which includes both
+services). Leave Docker Command empty and set Health Check Path to `/health`.
+Use a public Docker Web Service: browser API mutations need its public HTTPS URL.
+
+The multi-stage image uses Python 3.13.18 and pinned uv 0.13.9 to install only
+production dependencies from `uv.lock`. Its non-root runtime starts the Uvicorn
+application factory on `0.0.0.0` and Render's `PORT` (default `10000`), without
+development reload or dependency installation at startup.
+
+All backend configuration comes from Render Environment settings at runtime;
+there are no secret build arguments or embedded `.env` files. Set `ENV=production`,
+`AUTH_MODE=clerk`, the trusted Clerk instance's publishable key and PEM
+`JWKS_PUBLIC_KEY`, both frontend-origin JSON lists, and your Postgres URLs. Use the
+deployed frontend HTTPS origin in both lists, not localhost or the backend URL.
+The backend does not consume `CLERK_SECRET_KEY`. See the root README for the full
+two-service environment table and frontend rebuild requirements.
+
+The image includes Alembic but does not migrate or seed the database on startup.
+Only run `alembic upgrade head` separately for an authorized target database with
+a direct URL configured. `.dockerignore` keeps local secrets, environments, caches,
+tests and non-README Markdown out of the context. No container builds, tests or live
+requests were run for this packaging change.
+
 ## Configuration
 
 Settings load the repository root `.env`, then optional `Backend/.env`, using absolute
@@ -189,6 +215,16 @@ the trusted Clerk instance hostname; optional `CLERK_ISSUER` overrides it with a
 HTTPS origin. `CLERK_AUTHORIZED_PARTIES` optionally supplies an exact-origin JSON list,
 otherwise `CORS_ORIGINS` is used. Missing `azp` is deliberately rejected. Clock skew is
 5 seconds by default (`CLERK_CLOCK_SKEW_SECONDS`, 0–30).
+
+For local development at either frontend address, configure both
+`CORS_ORIGINS` and `CLERK_AUTHORIZED_PARTIES` as
+`["http://127.0.0.1:3000","http://localhost:3000"]`. These remain exact origins,
+not a wildcard or auth bypass. Restart the backend after changing environment
+files: settings are loaded at startup and cached, not reloaded per request.
+The latest ignored root `.env` correction adds the previously excluded localhost
+origin; it changes no credentials and was not live-tested at the user's request.
+Custom `publicMetadata.role` claims are not consulted for these checks and cannot
+repair an origin mismatch. No admin claim is required to use the application.
 
 RS256 signature, issuer, exp/nbf/iat, authorized party, user identity and active session
 claims are verified with PyJWT. No per-request Clerk call or secret-key lookup is needed.

@@ -103,7 +103,13 @@ try {
       `${path} should safely rewrite to setup when Clerk is absent.`,
     );
     const html = await response.text();
-    assert.match(html, /Authentication setup is required/);
+    assert.match(html, /Welcome to Career Mobility/);
+    assert.match(html, /Sign-in is temporarily unavailable/);
+    assert.match(html, /href="\/sign-in"/);
+    assert.doesNotMatch(
+      html,
+      /Authentication setup is required|server-only secret|environment file|Set Clerk|<form\b/,
+    );
     assert.doesNotMatch(
       html,
       /Amina Rahman|Fictional Candidate|1998-04-12|user_fictional|Bearer /,

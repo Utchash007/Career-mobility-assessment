@@ -33,10 +33,10 @@ export default function AppNavigation({
             <span className="text-xs font-medium text-action">Prototype</span>
           </span>
         </NavbarBrand>
-        {account ? (
-          <div className="flex items-center gap-3">{account}</div>
-        ) : null}
         <NavigationMenu items={items} />
+        {account ? (
+          <div className="order-3 flex shrink-0 items-center">{account}</div>
+        ) : null}
       </Navbar>
     </header>
   );

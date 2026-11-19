@@ -7,6 +7,7 @@ loadRootEnv();
 process.env.NEXT_PUBLIC_CLERK_KEYLESS_DISABLED = "true";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   agentRules: false,
   cacheComponents: false,
   reactCompiler: false,
