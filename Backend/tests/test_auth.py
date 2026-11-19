@@ -20,7 +20,7 @@ def signing_key():
     return rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
 
-def auth_settings(key) -> Settings:
+def auth_settings(key, **settings) -> Settings:
     public = (
         key.public_key()
         .public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo)
@@ -31,6 +31,7 @@ def auth_settings(key) -> Settings:
         auth_mode="clerk",
         jwks_public_key=public,
         clerk_issuer="https://fictional.clerk.accounts.dev",
+        **settings,
     )
 
 
@@ -204,3 +205,47 @@ def test_openapi_security_queries_and_common_errors() -> None:
     assert {
         parameter["name"] for parameter in schema["paths"]["/api/v1/matches"]["get"]["parameters"]
     } == {"page", "page_size", "q", "country", "type", "work_mode", "label"}
+
+
+@pytest.mark.asyncio
+async def test_single_render_service_accepts_public_tokens_but_still_rejects_other_origins(
+    signing_key,
+) -> None:
+    origin = "https://career-mobility-assessment.onrender.com"
+    app = create_app(
+        auth_settings(
+            signing_key,
+            panama_single_container=True,
+            render_external_url=origin,
+            next_public_api_url="http://127.0.0.1:8000",
+            cors_origins=["http://localhost:3000"],
+            clerk_authorized_parties=["http://localhost:3000"],
+        )
+    )
+    async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as client:
+        for azp, status in [
+            (origin, 404),
+            ("https://attacker.example", 401),
+            ("http://localhost:3000", 401),
+            ("http://127.0.0.1:8000", 401),
+            (None, 401),
+        ]:
+            response = await client.get(
+                "/api/v1/no-such-endpoint",
+                headers={"Authorization": "Bearer " + token(signing_key, azp=azp)},
+            )
+            assert response.status_code == status
+
+
+@pytest.mark.asyncio
+async def test_rejection_diagnostics_do_not_log_tokens_claims_or_identities(signing_key, caplog) -> None:
+    encoded = token(signing_key, azp="https://private-origin.example")
+    app = create_app(auth_settings(signing_key))
+    async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as client:
+        response = await client.get(
+            "/api/v1/profile", headers={"Authorization": "Bearer " + encoded}
+        )
+    assert response.status_code == 401
+    assert "reason=authorized_party_mismatch" in caplog.text
+    for private in [encoded, "user_fictional_test", "sess_fictional_test", "private-origin.example"]:
+        assert private not in caplog.text

@@ -2,6 +2,7 @@
 
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { type ReactNode, useEffect, useState } from "react";
+import { browserApiBase } from "@/lib/api/browser.ts";
 import { createApiClient } from "@/lib/api/client.ts";
 import { createTransport } from "@/lib/api/transport.ts";
 import { SessionApiContext } from "@/lib/session/context.ts";
@@ -30,7 +31,7 @@ export default function SessionScope({
       clerk.user?.id === userId;
     const client = createApiClient((spec, signal) =>
       createTransport({
-        baseUrl: process.env.NEXT_PUBLIC_API_URL,
+        baseUrl: browserApiBase(),
         getToken: async () => (isCurrent() ? getToken() : null),
         isCurrent,
         signal: scope.controller.signal,

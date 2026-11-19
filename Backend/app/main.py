@@ -1,5 +1,6 @@
 """FastAPI application factory with optional, lazy database resources."""
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -22,6 +23,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         # No network activity on startup, even when DATABASE_URL is configured.
+        logging.getLogger("uvicorn.error").info(
+            "Clerk verifier: issuer=%s authorized_parties=%s signing_key_configured=%s",
+            configuration.trusted_clerk_issuer,
+            configuration.trusted_frontend_origins,
+            configuration.jwks_public_key is not None,
+        )
         try:
             yield
         finally:

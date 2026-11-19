@@ -180,3 +180,64 @@ def test_pool_only_does_not_become_a_migration_url() -> None:
     )
     assert settings.database_url is not None
     assert settings.direct_url is None
+
+
+@pytest.mark.parametrize("parties", [None, ["http://localhost:3000", "http://127.0.0.1:3000"]])
+def test_single_render_service_uses_public_origin_instead_of_copied_local_settings(parties) -> None:
+    settings = Settings(
+        _env_file=None,
+        panama_single_container=True,
+        render_external_url="https://career-mobility-assessment.onrender.com/",
+        next_public_api_url="http://127.0.0.1:8000",
+        cors_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        clerk_authorized_parties=parties,
+    )
+    expected = ["https://career-mobility-assessment.onrender.com"]
+    assert settings.cors_origins == expected
+    assert settings.trusted_frontend_origins == expected
+
+
+def test_single_render_service_preserves_explicit_public_custom_domains() -> None:
+    settings = Settings(
+        _env_file=None,
+        panama_single_container=True,
+        render_external_url="https://career-mobility-assessment.onrender.com",
+        next_public_api_url="https://careers.example/",
+        cors_origins=["https://another.example", "http://localhost:3000"],
+        clerk_authorized_parties=["https://another.example", "http://localhost:3000"],
+    )
+    assert settings.trusted_frontend_origins == [
+        "https://another.example",
+        "https://career-mobility-assessment.onrender.com",
+        "https://careers.example",
+    ]
+    assert settings.cors_origins == settings.trusted_frontend_origins
+
+
+def test_render_origin_is_not_inferred_for_separate_or_local_services() -> None:
+    settings = Settings(
+        _env_file=None,
+        panama_single_container=False,
+        render_external_url="https://career-mobility-assessment.onrender.com",
+        next_public_api_url="http://127.0.0.1:8000",
+        cors_origins=["http://localhost:3000"],
+        clerk_authorized_parties=["http://localhost:3000"],
+    )
+    assert settings.cors_origins == ["http://localhost:3000"]
+    assert settings.trusted_frontend_origins == ["http://localhost:3000"]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "http://public.example",
+        "https://user:password@example.com",
+        "https://public.example/path",
+        "https://public.example?query=1",
+        "https://*.example",
+        "https://localhost",
+    ],
+)
+def test_single_render_service_rejects_unsafe_deployment_origins(value: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, panama_single_container=True, render_external_url=value)

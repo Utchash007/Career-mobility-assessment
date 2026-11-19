@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
   agentRules: false,
   cacheComponents: false,
   reactCompiler: false,
+  env: {
+    // Build-time routing flag, not a credential. Browser requests stay on the
+    // current public origin when Next.js and FastAPI share this container.
+    NEXT_PUBLIC_API_SAME_ORIGIN:
+      process.env.PANAMA_SINGLE_CONTAINER === "true" ? "true" : "false",
+  },
   async rewrites() {
     if (process.env.PANAMA_SINGLE_CONTAINER !== "true") return [];
     return [

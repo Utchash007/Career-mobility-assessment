@@ -3,6 +3,7 @@
 import base64
 import re
 from functools import lru_cache
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -14,6 +15,16 @@ from sqlalchemy.exc import ArgumentError
 
 BACKEND_DIRECTORY = Path(__file__).resolve().parents[2]
 ENV_FILES = (BACKEND_DIRECTORY.parent / ".env", BACKEND_DIRECTORY / ".env")
+
+
+def is_loopback_origin(origin: str) -> bool:
+    hostname = urlsplit(origin).hostname or ""
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        return True
+    try:
+        return ip_address(hostname).is_loopback
+    except ValueError:
+        return False
 
 
 def parse_database_url(value: str) -> URL:
@@ -57,6 +68,9 @@ class Settings(BaseSettings):
     # Auto uses supplied trusted configuration, never a fixed-user bypass.
     auth_mode: Literal["auto", "disabled", "clerk"] = "auto"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    panama_single_container: bool = False
+    render_external_url: str | None = None
+    next_public_api_url: str | None = None
     database_url: SecretStr | None = None
     database_url_pooled: SecretStr | None = None
     direct_url: SecretStr | None = None
@@ -189,6 +203,49 @@ class Settings(BaseSettings):
             except ValueError as exc:
                 raise ValueError("CORS origin has an invalid port") from exc
         return list(dict.fromkeys(origins))
+
+    @field_validator("render_external_url", "next_public_api_url")
+    @classmethod
+    def validate_application_url(cls, value: str | None) -> str | None:
+        if not value:
+            return None
+        # URLs may have a root slash; authorized parties must be exact origins.
+        origin = value.removesuffix("/")
+        cls.validate_cors_origins([origin])
+        if urlsplit(origin).scheme != "https" and not is_loopback_origin(origin):
+            raise ValueError("Application URLs require HTTPS except for local development.")
+        return origin
+
+    @model_validator(mode="after")
+    def configure_single_render_service_origins(self) -> "Settings":
+        if not self.panama_single_container or self.render_external_url is None:
+            return self
+        if (
+            urlsplit(self.render_external_url).scheme != "https"
+            or is_loopback_origin(self.render_external_url)
+        ):
+            raise ValueError("Render's application URL must be a public HTTPS origin.")
+        # Render supplies this URL as trusted process configuration. Never derive
+        # allowed token origins from request Host/Origin headers or token claims.
+        deployed_origins = [self.render_external_url]
+        if self.next_public_api_url and not is_loopback_origin(self.next_public_api_url):
+            deployed_origins.append(self.next_public_api_url)
+        self.cors_origins = list(
+            dict.fromkeys(
+                origin
+                for origin in [*self.cors_origins, *deployed_origins]
+                if not is_loopback_origin(origin)
+            )
+        )
+        if self.clerk_authorized_parties is not None:
+            self.clerk_authorized_parties = list(
+                dict.fromkeys(
+                    origin
+                    for origin in [*self.clerk_authorized_parties, *deployed_origins]
+                    if not is_loopback_origin(origin)
+                )
+            )
+        return self
 
 
 @lru_cache

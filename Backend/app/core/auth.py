@@ -1,7 +1,8 @@
 """Networkless Clerk session verification and an authentication-first boundary."""
 
+import logging
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 import jwt
 from cryptography.exceptions import UnsupportedAlgorithm
@@ -15,6 +16,7 @@ from app.core.config import Settings
 from app.core.errors import APIError, error_response
 
 bearer_scheme = HTTPBearer(auto_error=False, scheme_name="ClerkSession")
+logger = logging.getLogger("uvicorn.error")
 
 
 @dataclass(frozen=True)
@@ -28,24 +30,30 @@ class TokenVerifier:
         self.settings = settings
         self._public_key: RSAPublicKey | None = None
 
+    def _reject(self, reason: str, message: str = "Session token is invalid or expired.") -> NoReturn:
+        # Fixed diagnostic codes only: no token, claims, identities or headers.
+        logger.warning("Clerk authentication rejected: reason=%s", reason)
+        raise APIError(401, "UNAUTHENTICATED", message) from None
+
     def verify(self, request: Request) -> CurrentUser:
         values = [
             value for name, value in request.scope["headers"] if name.lower() == b"authorization"
         ]
         if len(values) != 1:
-            raise APIError(401, "UNAUTHENTICATED", "Sign in to continue.")
+            self._reject("missing_or_duplicate_bearer", "Sign in to continue.")
         header = request.headers.get("authorization", "")
         parts = header.split()
         if len(parts) != 2 or parts[0].lower() != "bearer":
-            raise APIError(401, "UNAUTHENTICATED", "Sign in to continue.")
+            self._reject("malformed_bearer", "Sign in to continue.")
         if len(parts[1]) > 16384:
-            raise APIError(401, "UNAUTHENTICATED", "Session token is invalid.")
+            self._reject("oversized_token", "Session token is invalid.")
         issuer = self.settings.trusted_clerk_issuer
         if (
             self.settings.auth_mode == "disabled"
             or self.settings.jwks_public_key is None
             or issuer is None
         ):
+            logger.error("Clerk authentication unavailable: reason=missing_configuration")
             raise APIError(503, "SERVICE_UNAVAILABLE", "Authentication is not configured.")
         if self._public_key is None:
             try:
@@ -55,6 +63,7 @@ class TokenVerifier:
                     raise ValueError("Unsupported signing key")
                 self._public_key = key
             except (ValueError, TypeError, UnsupportedAlgorithm):
+                logger.error("Clerk authentication unavailable: reason=invalid_signing_key")
                 raise APIError(
                     503,
                     "SERVICE_UNAVAILABLE",
@@ -73,25 +82,42 @@ class TokenVerifier:
                 },
             )
             if any(type(claims[name]) is not int for name in ("exp", "nbf", "iat")):
-                raise ValueError("Invalid time claim")
+                self._reject("invalid_time_claim")
             if claims["azp"] not in self.settings.trusted_frontend_origins:
-                raise ValueError("Disallowed authorized party")
+                self._reject("authorized_party_mismatch")
             user_id, session_id = claims["sub"], claims["sid"]
             if (
                 not isinstance(user_id, str)
                 or not user_id.startswith("user_")
                 or len(user_id) > 200
             ):
-                raise ValueError("Invalid user identity")
-            if (
-                not isinstance(session_id, str)
-                or not session_id.startswith("sess_")
-                or claims.get("sts") not in {None, "active"}
-            ):
-                raise ValueError("Not an active user session")
+                self._reject("invalid_user_identity")
+            if not isinstance(session_id, str) or not session_id.startswith("sess_"):
+                self._reject("invalid_session_identity")
+            if claims.get("sts") not in {None, "active"}:
+                self._reject("inactive_session")
             return CurrentUser(user_id=user_id, session_id=session_id)
+        except jwt.ExpiredSignatureError:
+            self._reject("token_expired")
+        except jwt.ImmatureSignatureError:
+            self._reject("token_not_yet_valid")
+        except jwt.InvalidSignatureError:
+            self._reject("signature_mismatch")
+        except jwt.InvalidIssuerError:
+            self._reject("issuer_mismatch")
+        except jwt.InvalidAlgorithmError:
+            self._reject("invalid_algorithm")
+        except jwt.InvalidIssuedAtError:
+            self._reject("invalid_time_claim")
+        except jwt.MissingRequiredClaimError as error:
+            claim = (
+                error.claim
+                if error.claim in {"exp", "nbf", "iat", "iss", "sub", "sid", "azp"}
+                else "claim"
+            )
+            self._reject("missing_required_" + claim)
         except (jwt.PyJWTError, ValueError, TypeError, KeyError):
-            raise APIError(401, "UNAUTHENTICATED", "Session token is invalid or expired.") from None
+            self._reject("invalid_token")
 
 
 class AuthenticationBoundary:

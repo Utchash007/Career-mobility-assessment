@@ -238,7 +238,7 @@ actual service hostname.
 
 | Variable | Value / purpose |
 | --- | --- |
-| `NEXT_PUBLIC_API_URL` | This **same service's** HTTPS origin, e.g. `https://career-mobility.onrender.com`, without `/api/v1` or another path |
+| `NEXT_PUBLIC_API_URL` | Optional for this Render container; set to the same service's HTTPS origin when using a custom domain. Required for separate/local API servers. No `/api/v1` or another path |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
 | `CLERK_SECRET_KEY` | Clerk server secret; runtime only |
 | `ENV` | `production` |
@@ -251,18 +251,36 @@ actual service hostname.
 | `DIRECT_URL` | Optional explicit direct database URL for migrations |
 
 Both origin lists must name the **public application URL**, not the private backend
-address. Update them when adding a custom domain. Use keys from the same Clerk
+address. In this single-container Render deployment, the backend automatically adds
+Render's `RENDER_EXTERNAL_URL` and a configured public `NEXT_PUBLIC_API_URL` to both
+lists, preserves explicit public origins, and removes copied local loopback entries.
+Browser API calls use the current page's origin, not a build-time loopback URL.
+Outside this Render container, origin lists retain their explicit/local behavior.
+Update them when adding a custom domain. Use keys from the same Clerk
 instance, and never place database credentials or the Clerk secret in a
 `NEXT_PUBLIC_*` variable.
 
 Render also makes environment settings available as Docker build arguments. The
 Dockerfile consumes **only** `NEXT_PUBLIC_API_URL` and
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` during the frontend build. Set both before the
-first build; changing either later requires a **rebuild**, not just a restart.
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` during the frontend build. Set the publishable key
+before building; changing it requires a **rebuild**, not just a restart. The API URL
+is not required to build this same-origin container. Outside Docker, changing the
+public API URL also requires rebuilding the frontend.
 Server secrets are runtime-only and are not baked into image layers.
 
-`PORT`, `PANAMA_SINGLE_CONTAINER`, and `API_INTERNAL_URL` are handled by the image
-or Render. Do not replace the image's internal routing configuration.
+`PORT`, `RENDER_EXTERNAL_URL`, `PANAMA_SINGLE_CONTAINER`, and `API_INTERNAL_URL` are
+handled by the image or Render. The frontend embeds `NEXT_PUBLIC_API_SAME_ORIGIN`
+from its Docker-mode configuration; do not set this flag manually. Do not replace
+the image's internal routing configuration.
+
+If an authenticated page still gets API `401` responses, Render logs now include
+`Clerk authentication rejected: reason=...`, distinguishing an origin mismatch,
+signature mismatch, issuer mismatch, missing required claim, or expired token.
+Only fixed reason codes are logged—never tokens, complete claims, or identities.
+Startup logs show the configured public issuer and allowed origins. A
+`signature_mismatch` requires the PEM from the same Clerk instance as the
+publishable key; `issuer_mismatch` also warrants checking a stale `CLERK_ISSUER`
+override. Signing in repeatedly cannot repair a signing-key or origin mismatch.
 
 ### 4. Deploy and Initialise a New Database
 

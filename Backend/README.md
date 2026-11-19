@@ -165,7 +165,7 @@ network requests, including when a database URL is supplied.
 
 Use the **repository-root `Dockerfile` for one Render service running both apps**.
 Leave Root Directory and Docker Command empty; use Dockerfile Path `./Dockerfile`,
-Docker Build Context `.`, branch `Frontend` and Health Check Path `/health`.
+Docker Build Context `.`, branch `main` and Health Check Path `/health`.
 Do not create a separate backend service.
 
 The multi-stage image uses Python 3.13.18 and pinned uv 0.13.9 to install only
@@ -180,6 +180,10 @@ there are no secret build arguments or embedded `.env` files. Set `ENV=productio
 `AUTH_MODE=clerk`, the trusted Clerk instance's publishable key and PEM
 `JWKS_PUBLIC_KEY`, both frontend-origin JSON lists, and your Postgres URLs. Use the
 single service's public HTTPS origin in both lists, not the private loopback URL.
+In Docker mode on Render, settings automatically add `RENDER_EXTERNAL_URL` and a
+configured public `NEXT_PUBLIC_API_URL` to both lists, preserve explicit public
+origins, and remove local loopback entries. This prevents copied development origin
+lists from rejecting production sessions. Other deployment modes are unchanged.
 The backend does not consume `CLERK_SECRET_KEY`. See the root README for the full
 single-service environment table and frontend rebuild requirements. The Dockerfile
 contains the launcher that stops both apps if either exits or Render shuts down.
@@ -234,6 +238,13 @@ claims are verified with PyJWT. No per-request Clerk call or secret-key lookup i
 `CLERK_SECRET_KEY` is not used by this backend. Signing-key rotation requires updating
 the root key and restarting the backend; rotating remote JWKS is not implemented.
 Missing/invalid trusted configuration never becomes a fixed user or public API access.
+
+Render logs report fixed rejection reason codes such as `authorized_party_mismatch`,
+`signature_mismatch`, `issuer_mismatch`, `token_expired`, and `missing_required_azp`.
+Tokens, claim values, identities, request bodies and headers are never logged.
+Startup logs include only the configured public issuer/origins and signing-key
+presence, not credentials. The Render origin fix and its added regression cases
+are source-reviewed only; no tests, builds or live authentication were run.
 
 ## Database and migrations
 
