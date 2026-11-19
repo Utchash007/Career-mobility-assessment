@@ -1,7 +1,7 @@
 # Backend implementation
 
 FastAPI + async SQLAlchemy + Neon/Postgres backend, implemented in separate phases.
-Only health is exposed at Phase 1; business routes and authentication come later.
+Health is public; implemented business routes are protected by Clerk verification.
 
 ## Phase progress
 
@@ -11,7 +11,19 @@ Only health is exposed at Phase 1; business routes and authentication come later
 | 1 — DTOs, normalization, pagination and common errors | Implemented | Deferred to final phase |
 | 2 — database models, initial migration and session dependency | Implemented; revision 0001 applied to the authorized root database | Tests deferred to final phase |
 | 3 — Clerk verification and protected API boundary | Implemented | Deferred to final phase |
-| 4–8 — business features | Pending | Deferred to final phase |
+| 4 — profile read, complete replacement and sample loading | Implemented | Deferred to final phase |
+| 5–8 — opportunities, matching and shortlist | Pending | Deferred to final phase |
+
+### Profile routes
+
+- `GET /api/v1/profile`: own profile, or 404 `PROFILE_NOT_FOUND`.
+- `PUT /api/v1/profile`: full replacement; 201 on first creation, otherwise 200.
+- `POST /api/v1/profile/sample`: send `{}` to load the fictional sample under your own identity.
+
+All requests use a Clerk bearer session token; writes use `Content-Type: application/json`.
+Omitted optional profile fields reset to their defaults. Experience null is not zero;
+enrolment null is not false; authorization countries not declared remain unknown.
+Profile edits preserve existing shortlist rows. Name and birthday do not affect matching.
 | 9 — all tests and integration verification | Pending | Not run yet |
 
 Per project instruction, no tests, lint, format checks, health probes or application

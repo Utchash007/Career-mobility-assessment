@@ -7,6 +7,12 @@ from app.core.errors import APIError, validation_fields
 from app.schemas.query import CollectionQuery, MatchQuery, OpportunityQuery, ShortlistQuery
 
 
+def no_query_parameters(request: Request) -> None:
+    if request.query_params:
+        name = next(iter(request.query_params))
+        raise APIError(422, "VALIDATION_ERROR", "This endpoint accepts no query parameters.", {name: "Remove this parameter."})
+
+
 def parse_query[T: CollectionQuery](request: Request, schema: type[T]) -> T:
     values: dict[str, str] = {}
     for name, value in request.query_params.multi_items():
