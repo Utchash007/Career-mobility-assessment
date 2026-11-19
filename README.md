@@ -5,7 +5,7 @@ This repository contains two independently runnable project scaffolds:
 - [`Frontend/`](Frontend/README.md): Next.js App Router, TypeScript, Flowbite React, Tailwind CSS, Clerk SDK and Zod.
 - [`Backend/`](Backend/README.md): FastAPI, async SQLAlchemy/Postgres tooling, Alembic and configuration for future Clerk verification.
 
-**Setup only:** no UI, sign-in flow, database tables, seed data, career profiles, matching engine or shortlisting has been implemented. Clerk and database packages prepare the projects for later implementation; external services are not required for the scaffold health checks. Do not treat the scaffold as an authenticated production application.
+**Frontend remains setup-only.** Backend implementation is progressing on the `Backend` branch; see `Backend/README.md` for phase status. Phase 1 adds shared API contracts and errors, not business routes. All new verification is deferred to the final phase; historical scaffold checks are not evidence for later changes. Do not treat this as a verified production application.
 
 `openapi-typescript` is intentionally **not included**. Frontend API types will be maintained manually when actual endpoints are implemented. FastAPI's built-in OpenAPI documentation is separate and does not require that frontend package.
 

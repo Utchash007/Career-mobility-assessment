@@ -1,9 +1,28 @@
-# Backend setup only
+# Backend implementation
 
-Minimal FastAPI scaffold for the intended FastAPI + async SQLAlchemy + Neon/Postgres
-architecture. Local-only planning documents describe future work: no models,
-application tables, migration revisions, seed data, business
-endpoints, matcher, or authentication are implemented here.
+FastAPI + async SQLAlchemy + Neon/Postgres backend, implemented in separate phases.
+Only health is exposed at Phase 1; business routes and authentication come later.
+
+## Phase progress
+
+| Phase | Implementation | Verification |
+| --- | --- | --- |
+| 0 — scaffold and root environment loading | Completed previously | Historical results below |
+| 1 — DTOs, normalization, pagination and common errors | Implemented | Deferred to final phase |
+| 2–8 — database, authentication and business features | Pending | Deferred to final phase |
+| 9 — all tests and integration verification | Pending | Not run yet |
+
+Per project instruction, no tests, lint, format checks, health probes or application
+execution checks are run during implementation phases. Phase commits are not claims
+of verified correctness; all verification is deferred to Phase 9.
+
+Phase 1 adds strict nested write contracts, explicit unknown values, common collection
+queries (`page=1`, `page_size=10`, maximum 100), duplicate/unknown query rejection and
+safe error envelopes. No database writes or business endpoints are added in this phase.
+
+Matching formula details (empty skill requirements, multi-language aggregation,
+experience distance, unknown education fields and education critical-flag policy)
+will be finalized and documented with the matcher in Phase 6 before final testing.
 
 ## Python and installation (Windows PowerShell)
 

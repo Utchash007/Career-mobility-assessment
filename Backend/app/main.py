@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
 from app.core.config import Settings, get_settings
+from app.core.errors import register_error_handlers
 from app.db.session import Database
 
 
@@ -31,6 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = configuration
     app.state.database = database
+    register_error_handlers(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=configuration.cors_origins,
