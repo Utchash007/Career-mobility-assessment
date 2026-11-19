@@ -15,7 +15,28 @@ Health is public; implemented business routes are protected by Clerk verificatio
 | 5 — validated seed command and opportunity discovery | Implemented; seed writes not run | Deferred to final phase |
 | 6 — pure deterministic matcher and explanations | Implemented | Deferred to final phase |
 | 7 — ranked recommendation list and individual breakdown | Implemented | Deferred to final phase |
-| 8 — shortlist and application-data deletion | Pending | Deferred to final phase |
+| 8 — shortlist, note edits and atomic application-data deletion | Implemented | Deferred to final phase |
+
+### Shortlist and privacy routes
+
+`GET /api/v1/shortlist` uses common filters/pagination, sorting by created_at_desc
+(default), created_at_asc or title_asc, ties by opportunity ID. Saves are addressed
+only by opportunity ID:
+
+- `POST /api/v1/shortlist/{opportunity_id}` with `{}` or `{"note":"..."}`: 201 new,
+  200 already saved. Omitted note preserves existing text; explicit note updates it.
+- `PATCH /api/v1/shortlist/{opportunity_id}` requires `note` (0–500 chars); empty clears
+  it; absence from your saved set is 404 SHORTLIST_ITEM_NOT_FOUND.
+- `DELETE /api/v1/shortlist/{opportunity_id}`: idempotent 204, no body, even for absent IDs.
+
+All shortlist operations need a saved profile (409 PROFILE_REQUIRED). Mutations lock
+that user's profile and use one explicit transaction. Unique keys prevent duplicates;
+unchanged notes preserve timestamps. Lists contain no copied/stale match results.
+
+`DELETE /api/v1/me` atomically removes only your application profile and saved rows,
+returns actual removal counts, and preserves seeded opportunities. Repeat returns zero
+removals. `clerk_account_deleted` is always false: this is **not account deletion**,
+session revocation or sign-out. Clerk account management remains with Clerk's prebuilt UI.
 
 ### Recommendation routes
 
