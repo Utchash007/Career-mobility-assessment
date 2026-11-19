@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createApiClient } from "@/lib/api/client.ts";
 import { createTransport } from "@/lib/api/transport.ts";
 import { SessionApiContext } from "@/lib/session/context.ts";
+import { createWriteCoordinator } from "@/lib/session/writes.ts";
 
 export default function SessionScope({ userId, sessionId, children }: { userId: string; sessionId: string; children: ReactNode }) {
   const clerk = useClerk();
@@ -19,7 +20,7 @@ export default function SessionScope({ userId, sessionId, children }: { userId: 
       isCurrent,
       signal: scope.controller.signal,
     })(spec, signal));
-    return { ...client, isCurrent };
+    return { ...client, isCurrent, writes: createWriteCoordinator() };
   });
   useEffect(() => {
     // Recreate after Strict Mode's cleanup replay; old requests retain the old signal.

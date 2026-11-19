@@ -1,6 +1,6 @@
 # Frontend — component-first interface
 
-**Phases 1–7 are implemented, not yet execution-verified.** The Next.js App
+**Phases 1–8 are implemented, not yet execution-verified.** The Next.js App
 Router frontend includes manual API contracts, Zod validation, profile conversion,
 strict query helpers and a palette-themed, component-first application shell.
 `/` now requires sign-in and renders a temporary workflow overview. Clerk prebuilt
@@ -144,6 +144,19 @@ Opportunity/profile reads start concurrently; match follows only profile existen
 Missing/deleted profile or unavailable matching does not hide available role data.
 `MatchPanel` reuses the full five-criterion breakdown and visible eligibility flags.
 Back links preserve only validated known collection context, never arbitrary return URLs.
+
+### Shortlist and private notes
+
+`ShortlistAction` is shared across browsing, matches, detail and saved cards.
+Adds send `{}`, preserving existing notes; removes confirm and handle no-body 204.
+Current-item optimism rolls back definite failures; uncertain writes require an explicit
+saved-state read. A confirmed write with failed refetch stays confirmed, not rolled back.
+`ShortlistNoteEditor` owns a dirty draft with explicit Save; empty string clears and
+500 counts Unicode characters. Dirty notes survive background refresh. Missing rows
+are recoverable, never automatically recreated. Note reconciliation uses bounded
+current-user list reads because the backend has no single-item shortlist GET.
+Same-item note/toggle operations serialize; deletion reserves an exclusive session
+operation. `/shortlist` uses backend filters/totals and repairs disappeared last pages.
 
 ## Color scheme
 

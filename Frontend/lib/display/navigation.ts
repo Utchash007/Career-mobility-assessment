@@ -29,7 +29,7 @@ export const NAVIGATION_ITEMS = [
     label: "Matches",
     availability: "available",
   },
-  { href: APP_ROUTES.shortlist, label: "Shortlist", availability: "planned" },
+  { href: APP_ROUTES.shortlist, label: "Shortlist", availability: "available" },
   { href: APP_ROUTES.account, label: "Account", availability: "planned" },
 ] as const satisfies readonly NavigationItem[];
 

@@ -24,7 +24,7 @@ import { createProfileDraft, parseProfileDraft } from "@/lib/forms/profile-draft
 export default function ProfileForm({ initialProfile, displayName, today }: { initialProfile: ProfileRead | null; displayName: string; today: string }) {
   const api = useApi();
   const router = useRouter();
-  const operation = useOperation();
+  const operation = useOperation("profile");
   const form = useRef<HTMLFormElement>(null);
   const [saved, setSaved] = useState(initialProfile);
   const [draft, setDraft] = useState(() => createProfileDraft(initialProfile));
