@@ -11,7 +11,7 @@ def test_defaults_need_no_external_credentials() -> None:
     assert settings.database_url is None
     assert settings.direct_url is None
     assert settings.cors_origins == ["http://localhost:3000"]
-    assert settings.auth_mode == "disabled"
+    assert settings.auth_mode == "auto"
 
 
 def test_env_example_is_valid_without_credentials() -> None:
@@ -67,13 +67,16 @@ def test_valid_postgres_urls_and_secrets_are_not_displayed() -> None:
 
 @pytest.mark.parametrize("env", ["development", "test", "production"])
 @pytest.mark.parametrize("mode", ["dev", "clerk"])
-def test_unimplemented_auth_modes_are_rejected(env: str, mode: str) -> None:
+def test_dev_bypass_and_unconfigured_explicit_clerk_are_rejected(env: str, mode: str) -> None:
     with pytest.raises(ValidationError):
         Settings(_env_file=None, env=env, auth_mode=mode)
 
 
-def test_production_scaffold_has_no_auth_bypass() -> None:
-    assert Settings(_env_file=None, env="production").auth_mode == "disabled"
+def test_production_has_no_fixed_user_bypass() -> None:
+    settings = Settings(_env_file=None, env="production")
+    assert settings.auth_mode == "auto"
+    assert settings.trusted_clerk_issuer is None
+    assert settings.jwks_public_key is None
 
 
 @pytest.mark.parametrize(

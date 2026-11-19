@@ -1,7 +1,7 @@
 [project]
 name = "panama-assessment-backend"
 version = "0.1.0"
-description = "Minimal FastAPI setup for the Panama assessment; business features are not implemented."
+description = "Career mobility backend with Clerk authentication and deterministic opportunity matching."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [

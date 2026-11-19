@@ -30,15 +30,16 @@ async def test_lifespan_disposes_optional_database_resources() -> None:
 
 
 @pytest.mark.asyncio
-async def test_only_liveness_is_in_openapi_and_business_paths_are_absent() -> None:
+async def test_openapi_documents_business_paths_without_exposing_them_anonymously() -> None:
     app = create_app(Settings(_env_file=None))
     async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as client:
         schema = await client.get("/openapi.json")
         assert schema.status_code == 200
-        assert set(schema.json()["paths"]) == {"/health"}
+        assert len(schema.json()["paths"]) == 10
+        assert sum(len(path) for path in schema.json()["paths"].values()) == 13
         assert (await client.get("/docs")).status_code == 200
         assert (await client.get("/redoc")).status_code == 200
-        assert (await client.get("/api/v1/profile")).status_code == 404
+        assert (await client.get("/api/v1/profile")).status_code == 401
         assert (await client.post("/health")).status_code == 405
 
 
@@ -65,7 +66,7 @@ async def test_cors_allows_only_exact_default_origin() -> None:
             "/health",
             headers={
                 "Origin": "http://localhost:3000",
-                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Method": "TRACE",
             },
         )
         assert denied_method.status_code == 400

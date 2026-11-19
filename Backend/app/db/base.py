@@ -1,4 +1,4 @@
-"""Empty metadata for future Alembic migrations; no schema implementation."""
+"""Shared declarative metadata for the application tables."""
 
 from sqlalchemy.orm import DeclarativeBase
 

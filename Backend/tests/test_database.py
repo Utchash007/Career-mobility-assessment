@@ -7,8 +7,10 @@ from app.db.base import Base
 from app.db.session import Database
 
 
-def test_metadata_has_no_application_tables() -> None:
-    assert not Base.metadata.tables
+def test_metadata_has_exactly_the_three_application_tables() -> None:
+    from app.db import models  # noqa: F401 -- ensure metadata registration
+
+    assert set(Base.metadata.tables) == {"profiles", "opportunities", "shortlist"}
 
 
 @pytest.mark.asyncio

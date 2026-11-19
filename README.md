@@ -1,13 +1,13 @@
-# Career Mobility Platform — project setup
+# Career Mobility Platform
 
-This repository contains two independently runnable project scaffolds:
+This repository contains two independently runnable projects:
 
 - [`Frontend/`](Frontend/README.md): Next.js App Router, TypeScript, Flowbite React, Tailwind CSS, Clerk SDK and Zod.
-- [`Backend/`](Backend/README.md): FastAPI, async SQLAlchemy/Postgres tooling, Alembic and configuration for future Clerk verification.
+- [`Backend/`](Backend/README.md): FastAPI, async SQLAlchemy/Postgres, Alembic, Clerk token verification and explainable opportunity matching.
 
-**Setup only:** no UI, sign-in flow, database tables, seed data, career profiles, matching engine or shortlisting has been implemented. Clerk and database packages prepare the projects for later implementation; external services are not required for the scaffold health checks. Do not treat the scaffold as an authenticated production application.
+**Frontend remains setup-only.** Backend phases 1–9 are implemented on the `Backend` branch, each pushed separately. It includes profile, opportunities, matching, shortlist/notes and application-data deletion APIs. Migrations and twelve fictional opportunities were applied to the authorized database. Tests were deferred to Phase 9; live Clerk/user-owned database workflows were skipped by request. See `Backend/README.md` for verification limits. This is a prototype, not a production security guarantee.
 
-`openapi-typescript` is intentionally **not included**. Frontend API types will be maintained manually when actual endpoints are implemented. FastAPI's built-in OpenAPI documentation is separate and does not require that frontend package.
+`openapi-typescript` is intentionally **not included**. Frontend types will be maintained manually against FastAPI's built-in `/openapi.json`, which documents request/response schemas, bearer authentication, filters, pagination and errors.
 
 ## Run locally
 
@@ -41,12 +41,12 @@ Stop either development server with `Ctrl+C`.
 
 - Keep the shared `.env` in the repository root; neither app requires moving or copying it. Both apps also support an optional `.env` inside their own folder. Real environment variables override project-local values, which override root values (per key). Backend paths are absolute; frontend root lookup is relative to its loader, not the terminal's working directory.
 - All `.env*` files (including example templates), agent folders/configuration, dependencies, caches, and Markdown except README files are excluded from Git. Planning documents remain local.
-- Shared names: `DATABASE_URL` (direct when paired), `DATABASE_URL_POOLED` (application pool), `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `JWKS_PUBLIC_KEY`. Clerk variables remain reserved and do not enable authentication. Never expose server secrets through `NEXT_PUBLIC_*` variables.
+- Shared names: `DATABASE_URL` (direct when paired), `DATABASE_URL_POOLED` (application pool), `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `JWKS_PUBLIC_KEY`. Backend verification uses a trusted issuer, the PEM public signing key and exact allowed frontend origins; no Clerk secret-key call is needed. See `Backend/README.md`. Never expose server secrets through `NEXT_PUBLIC_*` variables.
 - Standard Neon `postgresql://` URLs are accepted and normalized for asyncpg in memory; the root `.env` is never rewritten. Only explicitly referenced `NEXT_PUBLIC_*` values can enter frontend browser bundles; do not add secrets to Next.js's `env` configuration.
 - Commit `Frontend/package-lock.json` and `Backend/uv.lock`; use locked installs rather than resolving fresh versions on every run.
 - The frontend requires the documented, narrowly scoped Flowbite `deepmerge-ts` security override. It crosses a major version, so retain the caveat and retest before introducing UI interactions.
 - Both health endpoints are scaffold liveness checks, not database, authentication or service-readiness guarantees.
-- Any later business endpoint must implement authentication, validation and user isolation before deployment.
+- Business endpoints require verified Clerk bearer session tokens; `/health` stays public. `DELETE /api/v1/me` deletes application data, not the Clerk account or session.
 
 ## Existing design references
 
